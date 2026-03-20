@@ -27,4 +27,4 @@ COPY . .
 EXPOSE 8080
 
 # Run the application
-CMD ["uv", "run", "uvicorn", "m_app.api:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["uv", "run", "uvicorn", "m_apper.api:app", "--host", "0.0.0.0", "--port", "8080"]

@@ -3,9 +3,9 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "m-app"
+name = "m-apper"
 version = "0.1.0"
-description = "M-App (Application Mapper) - AST-based Python code analyzer with Neo4j graph storage and web UI"
+description = "M-Apper (Application Mapper) - AST-based Python code analyzer with Neo4j graph storage and web UI"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -19,7 +19,7 @@ dependencies = [
 ]
 
 [project.scripts]
-mapp = "m_app.cli:app"
+mapper = "m_apper.cli:app"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
@@ -65,7 +65,7 @@ ignore = [
 "tests/*" = ["S101"]  # Allow assert in tests
 
 [tool.ruff.lint.isort]
-known-first-party = ["m_app"]
+known-first-party = ["m_apper"]
 section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
 
 [tool.mypy]

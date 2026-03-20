@@ -1,4 +1,4 @@
-# M-App (Application Mapper)
+# M-Apper (Application Mapper)
 
 [![Version](https://img.shields.io/github/v/release/octo-youcef/m-app)](https://github.com/octo-youcef/m-app/releases)
 [![CI](https://github.com/octo-youcef/m-app/actions/workflows/ci.yml/badge.svg)](https://github.com/octo-youcef/m-app/actions/workflows/ci.yml)
@@ -9,7 +9,7 @@ AST-based Python code analyzer that maps application structure and relationships
 
 ## Overview
 
-M-App helps you understand complex Python applications by analyzing their Abstract Syntax Trees (AST) and creating an interactive graph representation of classes, functions, methods, imports, and their relationships.
+M-Apper helps you understand complex Python applications by analyzing their Abstract Syntax Trees (AST) and creating an interactive graph representation of classes, functions, methods, imports, and their relationships.
 
 ### Key Features
 
@@ -70,7 +70,7 @@ The services will be available at:
 
 ```bash
 # Analyze a Python package
-mapp analyze /path/to/package
+mapper analyze /path/to/package
 
 # View analysis results in Neo4j Browser
 # Navigate to http://localhost:7474
@@ -99,7 +99,7 @@ just lint            # Run all quality checks
 just fix             # Auto-fix linting issues
 
 # CLI Development
-just mapp [args]     # Run CLI tool locally
+just mapper [args]     # Run CLI tool locally
 
 # Versioning
 just version-show    # Show current version
@@ -168,19 +168,19 @@ m-app/
 
 ```bash
 # Analyze a package
-mapp analyze /path/to/package
+mapper analyze /path/to/package
 
 # List analyzed packages
-mapp list
+mapper list
 
 # Show package details
-mapp show <package-name>
+mapper show <package-name>
 
 # Export graph data
-mapp export <package-name> --format json
+mapper export <package-name> --format json
 
 # Clear database
-mapp clear [package-name]
+mapper clear [package-name]
 ```
 
 ## API Documentation

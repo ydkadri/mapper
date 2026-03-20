@@ -2,7 +2,7 @@
 
 import ast
 
-from m_app import parser
+from m_apper import parser
 
 
 def test_parse_simple_code():

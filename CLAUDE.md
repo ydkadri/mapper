@@ -1,4 +1,4 @@
-# Claude Code Instructions for M-App
+# Claude Code Instructions for M-Apper
 
 This file contains project-specific instructions for Claude Code when working with this repository. General workflow preferences are in Claude's MEMORY.md and apply unless overridden here.
 
@@ -46,24 +46,24 @@ class RelationAnalyzer(Protocol): ...
 
 **Application imports MUST follow this pattern:**
 - Import the module, not individual classes/functions
-- Use `from m_app import module` then `module.Thing`
-- **DO NOT** use `from m_app.module import Thing`
+- Use `from m_apper import module` then `module.Thing`
+- **DO NOT** use `from m_apper.module import Thing`
 
 **Examples:**
 ```python
 # ✅ CORRECT
-from m_app import parser
-from m_app import graph
-from m_app import cli
+from m_apper import parser
+from m_apper import graph
+from m_apper import cli
 
 ast_tree = parser.parse_file(path)
 connection = graph.Neo4jConnection(uri, auth)
 cli.app()
 
 # ❌ INCORRECT
-from m_app.parser import parse_file
-from m_app.graph import Neo4jConnection
-from m_app.cli import app
+from m_apper.parser import parse_file
+from m_apper.graph import Neo4jConnection
+from m_apper.cli import app
 ```
 
 **Third-party imports:**
@@ -198,7 +198,7 @@ Examples of what to ask about:
 ```
 m-app/
 ├── src/
-│   └── m_app/              # Main package (all code here)
+│   └── m_apper/              # Main package (all code here)
 │       ├── __init__.py
 │       ├── cli.py          # Typer CLI entrypoint
 │       ├── parser.py       # AST parsing
@@ -247,7 +247,7 @@ just version patch    # Bump patch version (0.1.0 → 0.1.1)
 just version minor    # Bump minor version (0.1.0 → 0.2.0)
 
 # CLI
-just mapp [args]      # Run CLI tool
+just mapper [args]      # Run CLI tool
 ```
 
 ## Neo4j Graph Schema
@@ -277,8 +277,8 @@ just mapp [args]      # Run CLI tool
 
 ## Project-Specific Notes
 
-- CLI entrypoint is `mapp` (not `m-app`)
-- Refer to project as "M-App" in documentation
+- CLI entrypoint is `mapper` (not `m-apper`)
+- Refer to project as "M-Apper" in documentation
 - Neo4j runs in Docker for local development
 - FastAPI provides backend for web UI
 - Incremental updates with version tracking in Neo4j

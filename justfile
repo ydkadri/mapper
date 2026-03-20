@@ -24,7 +24,7 @@ up:
     @echo ""
     @echo "📋 Useful commands:"
     @echo "   just logs        - View container logs"
-    @echo "   just mapp        - Run CLI tool"
+    @echo "   just mapper      - Run CLI tool"
     @echo "   just down        - Stop containers"
     @echo ""
 
@@ -41,8 +41,8 @@ logs service="":
     fi
 
 # Run CLI tool
-mapp *args:
-    uv run mapp {{args}}
+mapper *args:
+    uv run mapper {{args}}
 
 # Format code (ruff + isort)
 format:
@@ -71,7 +71,7 @@ test *args:
 
 # Run tests with coverage
 test-coverage:
-    uv run pytest --cov=src/m_app --cov-report=html --cov-report=term
+    uv run pytest --cov=src/m_apper --cov-report=html --cov-report=term
 
 # Clean up generated files
 clean:

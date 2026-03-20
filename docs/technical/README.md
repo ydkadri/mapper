@@ -1,6 +1,6 @@
 # Technical Documentation
 
-This directory contains technical documentation for M-App developers.
+This directory contains technical documentation for M-Apper developers.
 
 ## Contents
 

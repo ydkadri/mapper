@@ -1,9 +1,9 @@
-"""CLI entrypoint for M-App using Typer."""
+"""CLI entrypoint for M-Apper using Typer."""
 
 import typer
 from rich.console import Console
 
-app = typer.Typer(help="M-App - Application Mapper for Python code")
+app = typer.Typer(help="M-Apper - Application Mapper for Python code")
 console = Console()
 
 

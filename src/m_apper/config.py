@@ -1,6 +1,5 @@
-"""Configuration management for M-App."""
+"""Configuration management for M-Apper."""
 
-from pydantic import Field
 from pydantic_settings import BaseSettings
 
 
