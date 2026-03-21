@@ -1,10 +1,9 @@
 # MApper (Application Mapper)
 
-[![Version](https://img.shields.io/github/v/release/octo-youcef/mapper)](https://github.com/octo-youcef/mapper/releases)
-[![CI](https://github.com/octo-youcef/mapper/actions/workflows/ci.yml/badge.svg)](https://github.com/octo-youcef/mapper/actions/workflows/ci.yml)
-[![Coverage](https://codecov.io/gh/octo-youcef/mapper/branch/main/graph/badge.svg)](https://codecov.io/gh/octo-youcef/mapper)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
-[![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
+![Version](https://img.shields.io/badge/version-0.1.1-blue.svg)
+![Tests](https://img.shields.io/badge/tests-45%20passing-success.svg)
+![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/octo-youcef/3424657d04826a3196811985d2f13687/raw/mapper-coverage.json)
+![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)
 
 AST-based Python code analyzer that maps application structure and relationships into a Neo4j graph database, with CLI and web UI for exploration.
 
