@@ -63,6 +63,7 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
 "tests/*" = ["S101"]  # Allow assert in tests
+"src/m_apper/cli.py" = ["B008"]  # Typer uses function calls in defaults
 
 [tool.ruff.lint.isort]
 known-first-party = ["m_apper"]
