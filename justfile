@@ -71,7 +71,7 @@ test *args:
 
 # Run tests with coverage
 test-coverage:
-    uv run pytest --cov=src/m_apper --cov-report=html --cov-report=term
+    uv run pytest --cov=src/mapper --cov-report=html --cov-report=term
 
 # Clean up generated files
 clean:

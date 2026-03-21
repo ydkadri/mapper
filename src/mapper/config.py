@@ -1,4 +1,4 @@
-"""Configuration management for M-Apper."""
+"""Configuration management for MApper."""
 
 from pydantic_settings import BaseSettings
 

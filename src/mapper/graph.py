@@ -4,7 +4,7 @@ from typing import Any, Protocol
 
 from neo4j import GraphDatabase
 
-from m_apper import config
+from mapper import config
 
 
 class StoresGraph(Protocol):

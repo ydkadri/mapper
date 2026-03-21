@@ -1,6 +1,6 @@
 # User Journey Documentation
 
-This directory contains user-focused workflow documentation for M-Apper.
+This directory contains user-focused workflow documentation for MApper.
 
 ## Contents
 

@@ -1,7 +1,8 @@
-# M-Apper (Application Mapper)
+# MApper (Application Mapper)
 
-[![Version](https://img.shields.io/github/v/release/octo-youcef/m-app)](https://github.com/octo-youcef/m-app/releases)
-[![CI](https://github.com/octo-youcef/m-app/actions/workflows/ci.yml/badge.svg)](https://github.com/octo-youcef/m-app/actions/workflows/ci.yml)
+[![Version](https://img.shields.io/github/v/release/octo-youcef/mapper)](https://github.com/octo-youcef/mapper/releases)
+[![CI](https://github.com/octo-youcef/mapper/actions/workflows/ci.yml/badge.svg)](https://github.com/octo-youcef/mapper/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/badge/coverage-0%25-red.svg)](https://github.com/octo-youcef/mapper)
 [![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
 [![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 
@@ -9,7 +10,7 @@ AST-based Python code analyzer that maps application structure and relationships
 
 ## Overview
 
-M-Apper helps you understand complex Python applications by analyzing their Abstract Syntax Trees (AST) and creating an interactive graph representation of classes, functions, methods, imports, and their relationships.
+MApper helps you understand complex Python applications by analyzing their Abstract Syntax Trees (AST) and creating an interactive graph representation of classes, functions, methods, imports, and their relationships.
 
 ### Key Features
 
