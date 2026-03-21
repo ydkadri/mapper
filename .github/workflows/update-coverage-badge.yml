@@ -1,0 +1,83 @@
+name: Update Coverage Badge
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  update-coverage:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Run tests with coverage
+        run: |
+          uv run pytest --cov=src/mapper --cov-report=term --cov-report=json
+
+      - name: Extract coverage percentage
+        id: coverage
+        run: |
+          COVERAGE=$(python -c "import json; print(json.load(open('coverage.json'))['totals']['percent_covered_display'])")
+          echo "percentage=$COVERAGE" >> $GITHUB_OUTPUT
+          echo "Coverage: $COVERAGE%"
+
+      - name: Determine badge color
+        id: color
+        run: |
+          COVERAGE=${{ steps.coverage.outputs.percentage }}
+          if (( $(echo "$COVERAGE >= 90" | bc -l) )); then
+            COLOR="brightgreen"
+          elif (( $(echo "$COVERAGE >= 75" | bc -l) )); then
+            COLOR="green"
+          elif (( $(echo "$COVERAGE >= 60" | bc -l) )); then
+            COLOR="yellow"
+          elif (( $(echo "$COVERAGE >= 40" | bc -l) )); then
+            COLOR="orange"
+          else
+            COLOR="red"
+          fi
+          echo "color=$COLOR" >> $GITHUB_OUTPUT
+          echo "Badge color: $COLOR"
+
+      - name: Update gist
+        env:
+          GIST_ID: 3424657d04826a3196811985d2f13687
+          GITHUB_TOKEN: ${{ secrets.GIST_TOKEN }}
+        run: |
+          cat > coverage.json << EOF
+          {
+            "schemaVersion": 1,
+            "label": "coverage",
+            "message": "${{ steps.coverage.outputs.percentage }}%",
+            "color": "${{ steps.color.outputs.color }}"
+          }
+          EOF
+
+          # Update the gist file
+          curl -X PATCH \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            "https://api.github.com/gists/$GIST_ID" \
+            -d @- << EOF
+          {
+            "files": {
+              "mapper-coverage.json": {
+                "content": $(cat coverage.json | jq -Rs .)
+              }
+            }
+          }
+          EOF

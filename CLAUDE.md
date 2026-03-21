@@ -263,12 +263,13 @@ tests/
 ### Version Management
 - Use `just version patch|minor|major` to bump version
 - Automatic updates:
-  - `pyproject.toml`
+  - `pyproject.toml` (version field)
+  - `src/mapper/__init__.py` (__version__ variable)
+  - `README.md` (version badge)
   - `CHANGELOG.md` ([Unreleased] → versioned section)
   - Creates git commit (no tag - tags created by GitHub Actions on release)
 - **Manual update after bump**:
   - Update "Current Version" field at bottom of this file
-  - Update "Current Version" field at bottom of README.md
 
 **Important**: Tags are NOT created locally. GitHub Actions automatically creates tags when PRs are merged to main. This prevents tag conflicts when feature branches are rebased during PR review.
 
@@ -276,18 +277,22 @@ tests/
 - **Before creating any PR**:
   1. Propose which version bump is appropriate (patch/minor/major)
   2. Wait for user confirmation
-  3. Run `just version <type>` to bump version
-  4. Update "Current Version" in this file and README.md
+  3. Run `just version <type>` to bump version (auto-updates version badge in README)
+  4. Update "Current Version" in this file
   5. **Run `just lint` and fix any linting issues**
-  6. **Run `just test-coverage` and update test coverage in README.md**
+  6. **Run `just test-coverage` and update tests badge count in README.md**
   7. Push version bump commit
   8. Then create the PR
 - **Every merged PR includes a version bump** - no exceptions
+- **Coverage badge**: Auto-updated by CI after merge to main (no manual update needed)
 
 ### Code Quality Before PR
 - **Linting**: Run `just lint` and fix all issues before creating PR
-- **Test Coverage**: Run `just test-coverage` and update coverage percentage in README.md
-- **README Badges**: Ensure CI badges and version info are up to date
+- **Test Coverage**: Run `just test-coverage` and update test count in README.md (e.g., "45 passing")
+- **README Badges**:
+  - Version badge: Auto-updated by `just version`
+  - Tests badge: Manually update count after running tests
+  - Coverage badge: Auto-updated by CI after merge (don't update manually)
 - **CI Status**: MUST wait for CI checks to pass before declaring PR ready for review
   - Use `gh pr view <number> --json statusCheckRollup` to check CI status
   - Wait for both `lint` and `test` checks to show `"conclusion":"SUCCESS"`
@@ -297,6 +302,16 @@ tests/
 - **Patch** - Bug fixes, documentation additions, minor improvements
 - **Minor** - New features, enhancements, new capabilities
 - **Major** - Breaking changes, incompatible API changes
+
+### README Badges System
+- **Version badge**: Static, auto-updated by `bump-my-version`
+- **Tests badge**: Static, manually updated with test count
+- **Coverage badge**: Dynamic, auto-updated by CI via GitHub Gist
+  - Gist ID: `3424657d04826a3196811985d2f13687`
+  - CI workflow: `.github/workflows/update-coverage-badge.yml`
+  - Updates on every push to main
+  - Color-coded: red (<40%), orange (40-60%), yellow (60-75%), green (75-90%), brightgreen (90%+)
+- **Python badge**: Static, manually updated for supported versions
 
 ## Project Structure
 
