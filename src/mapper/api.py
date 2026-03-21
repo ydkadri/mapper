@@ -1,11 +1,11 @@
-"""FastAPI backend for M-Apper web UI."""
+"""FastAPI backend for MApper web UI."""
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
-    title="M-Apper API",
-    description="Backend API for M-Apper Application Mapper",
+    title="MApper API",
+    description="Backend API for MApper Application Mapper",
     version="0.1.0",
 )
 
@@ -22,7 +22,7 @@ app.add_middleware(
 @app.get("/")
 async def root() -> dict[str, str]:
     """Root endpoint."""
-    return {"message": "M-Apper API", "version": "0.1.0"}
+    return {"message": "MApper API", "version": "0.1.0"}
 
 
 @app.get("/health")

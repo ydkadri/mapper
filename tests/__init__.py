@@ -1,1 +1,1 @@
-"""Tests for M-App."""
+"""Tests for MApper."""

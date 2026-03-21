@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "m-apper"
 version = "0.1.0"
-description = "M-Apper (Application Mapper) - AST-based Python code analyzer with Neo4j graph storage and web UI"
+description = "MApper (Application Mapper) - AST-based Python code analyzer with Neo4j graph storage and web UI"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -19,7 +19,7 @@ dependencies = [
 ]
 
 [project.scripts]
-mapper = "m_apper.cli:app"
+mapper = "mapper.cli:app"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
@@ -63,10 +63,10 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
 "tests/*" = ["S101"]  # Allow assert in tests
-"src/m_apper/cli.py" = ["B008"]  # Typer uses function calls in defaults
+"src/mapper/cli/*.py" = ["B008"]  # Typer uses function calls in defaults
 
 [tool.ruff.lint.isort]
-known-first-party = ["m_apper"]
+known-first-party = ["mapper"]
 section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
 
 [tool.mypy]
@@ -113,6 +113,11 @@ commit_args = ""
 filename = "pyproject.toml"
 search = 'version = "{current_version}"'
 replace = 'version = "{new_version}"'
+
+[[tool.bumpversion.files]]
+filename = "src/mapper/__init__.py"
+search = '__version__ = "{current_version}"'
+replace = '__version__ = "{new_version}"'
 
 [[tool.bumpversion.files]]
 filename = "CHANGELOG.md"

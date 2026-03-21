@@ -1,4 +1,4 @@
-# Claude Code Instructions for M-Apper
+# Claude Code Instructions for MApper
 
 This file contains project-specific instructions for Claude Code when working with this repository. General workflow preferences are in Claude's MEMORY.md and apply unless overridden here.
 
@@ -278,7 +278,7 @@ just mapper [args]      # Run CLI tool
 ## Project-Specific Notes
 
 - CLI entrypoint is `mapper` (not `m-apper`)
-- Refer to project as "M-Apper" in documentation
+- Refer to project as "MApper" in documentation
 - Neo4j runs in Docker for local development
 - FastAPI provides backend for web UI
 - Incremental updates with version tracking in Neo4j
