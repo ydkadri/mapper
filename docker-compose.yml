@@ -1,6 +1,6 @@
 services:
   neo4j:
-    image: neo4j:5.28-community
+    image: neo4j:5-community
     volumes:
       - neo4j_data:/data
       - neo4j_logs:/logs
