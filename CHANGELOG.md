@@ -1,0 +1,30 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+## [0.1.1] - 2026-03-21
+
+### Changed
+- Expanded Python support to 3.10+ (previously 3.12+)
+- Added CI matrix testing for Python 3.10, 3.11, and 3.12
+- Fixed coverage path in CI workflow
+
+## [0.1.0] - 2026-03-21
+
+### Added
+- Initial project setup with CLI structure
+- Typer-based CLI with placeholder commands
+- Modular CLI organization (analyse, config, queries groups)
+- Comprehensive test suite (45 tests)
+- Technical documentation for CLI commands
+- Neo4j Docker setup for development
+- GitHub Actions CI/CD pipeline
+
+[unreleased]: https://github.com/octo-youcef/mapper/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/octo-youcef/mapper/compare/v0.1.0...v0.1.1
+[0.1.0]: https://github.com/octo-youcef/mapper/releases/tag/v0.1.0
