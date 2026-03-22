@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.7] - 2026-03-22
 
+### Fixed
+- **Added missing CHANGELOG entries** for versions 0.2.4, 0.2.5, and 0.2.6
+  - These versions were merged without documenting their changes
+  - Now properly documented in CHANGELOG for historical reference
+
 ## [0.2.6] - 2026-03-22
 
 ### Changed
