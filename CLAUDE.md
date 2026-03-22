@@ -141,6 +141,41 @@ class CodeParser(Protocol): ...
 class GraphStore(Protocol): ...
 ```
 
+### Python Style Guide
+
+**Use sets instead of lists when:**
+- Uniqueness is required (no duplicates)
+- Performing membership tests (`in` operator)
+- Doing set operations (union, intersection, difference)
+- Order doesn't matter
+
+```python
+# ✅ CORRECT - Use sets for uniqueness and comparisons
+seen_modules = set()
+required_imports = {"typing", "attrs", "pathlib"}
+
+if module_name in seen_modules:  # O(1) lookup
+    continue
+seen_modules.add(module_name)
+
+# Check if all required imports present
+missing = required_imports - current_imports
+
+# ❌ INCORRECT - Using lists when sets are better
+seen_modules = []
+required_imports = ["typing", "attrs", "pathlib"]
+
+if module_name in seen_modules:  # O(n) lookup
+    continue
+seen_modules.append(module_name)
+```
+
+**Use lists when:**
+- Order matters
+- Need indexing or slicing
+- Allow duplicates
+- Need to maintain insertion order for display
+
 ### Code Organization
 
 **Application Logic:**
@@ -409,4 +444,4 @@ just mapper [args]    # Run CLI tool
 ---
 
 **Last Updated**: 2026-03-22
-**Current Version**: 0.2.7
+**Current Version**: 0.3.0
