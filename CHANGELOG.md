@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-03-23
+
 ### Added
 - **Status command** for comprehensive system health checking
   - `mapper status` command to verify configuration and Neo4j connectivity
