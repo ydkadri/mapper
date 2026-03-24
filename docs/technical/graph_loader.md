@@ -48,7 +48,8 @@ loader.finalize()
 ### Module
 - **Label**: `Module`
 - **Properties**:
-  - `name`: str - Module name
+  - `name`: str - Module name (e.g., "my_module")
+  - `fqn`: str - Fully qualified name (same as name for modules)
   - `path`: str - File path
   - `package`: str - Package name
   - `docstring`: str (optional) - Module docstring
@@ -56,7 +57,8 @@ loader.finalize()
 ### Class
 - **Label**: `Class`
 - **Properties**:
-  - `name`: str - Class name
+  - `name`: str - Class name (e.g., "MyClass")
+  - `fqn`: str - Fully qualified name (e.g., "my_module.MyClass")
   - `package`: str - Package name
   - `is_public`: bool - Whether class is public (based on naming convention)
   - `docstring`: str (optional) - Class docstring
@@ -65,7 +67,8 @@ loader.finalize()
 ### Function
 - **Label**: `Function`
 - **Properties**:
-  - `name`: str - Function name
+  - `name`: str - Function name (e.g., "my_function")
+  - `fqn`: str - Fully qualified name (e.g., "my_module.my_function")
   - `package`: str - Package name
   - `is_public`: bool - Whether function is public (based on naming convention)
   - `docstring`: str (optional) - Function docstring
@@ -75,7 +78,7 @@ loader.finalize()
 
 ### Method
 - **Label**: `Method`
-- **Properties**: Same as Function
+- **Properties**: Same as Function, but FQN includes class (e.g., "my_module.MyClass.my_method")
 - **Note**: Methods are functions within classes. Visibility determined by naming convention (`_private`, `public`, `__dunder__`)
 
 ## Relationship Types Created
