@@ -13,7 +13,7 @@ from mapper import (
 # Public classes from modules
 from mapper.graph import Neo4jConnection
 
-__version__ = "0.4.8"
+__version__ = "0.4.9"
 
 __all__ = [
     # Version
