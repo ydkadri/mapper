@@ -126,9 +126,9 @@ test-unit *args:
 test-integration *args:
     uv run pytest tests/integration {{args}}
 
-# Run unit tests with coverage (fails if coverage < 65%)
+# Run unit tests with coverage (fails if coverage < 79%)
 test-coverage:
-    uv run pytest tests/unit --cov=src/mapper --cov-report=html --cov-report=term --cov-report=json --cov-fail-under=65
+    uv run pytest tests/unit --cov=src/mapper --cov-report=html --cov-report=term --cov-report=json --cov-fail-under=79
 
 # ==============================================================================
 # Maintenance
