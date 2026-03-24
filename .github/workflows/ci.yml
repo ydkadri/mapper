@@ -16,6 +16,9 @@ jobs:
         with:
           enable-cache: true
 
+      - name: Install just
+        uses: extractions/setup-just@v2
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -25,13 +28,7 @@ jobs:
         run: uv sync
 
       - name: Run linting
-        run: |
-          uv run ruff format --check .
-          uv run isort --check-only .
-          uv run ruff check .
-
-      - name: Run type checking
-        run: uv run mypy .
+        run: just lint
 
   test:
     runs-on: ubuntu-latest
@@ -47,6 +44,9 @@ jobs:
         with:
           enable-cache: true
 
+      - name: Install just
+        uses: extractions/setup-just@v2
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -56,8 +56,7 @@ jobs:
         run: uv sync
 
       - name: Run unit tests with coverage
-        run: |
-          uv run pytest tests/unit --cov=src/mapper --cov-report=term --cov-fail-under=65
+        run: just test-unit --cov=src/mapper --cov-report=term --cov-fail-under=65
 
   integration:
     runs-on: ubuntu-latest
@@ -86,6 +85,9 @@ jobs:
         with:
           enable-cache: true
 
+      - name: Install just
+        uses: extractions/setup-just@v2
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -100,5 +102,4 @@ jobs:
           NEO4J_URI: bolt://localhost:7687
           NEO4J_USER: neo4j
           NEO4J_PASSWORD: test_password
-        run: |
-          uv run pytest tests/integration
+        run: just test-integration

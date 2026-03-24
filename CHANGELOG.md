@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.4] - 2026-03-24
+
+### Changed
+- **Use just commands in CI** for consistency between local and CI environments
+  - Install just in all CI workflows
+  - Replace raw pytest/ruff commands with `just lint`, `just test-unit`, `just test-integration`
+  - Ensures CI runs exactly the same commands as local development
+  - Makes CI configuration easier to maintain
+
 ## [0.4.3] - 2026-03-24
 
 ### Changed
