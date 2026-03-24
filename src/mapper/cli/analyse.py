@@ -8,7 +8,7 @@ from rich.console import Console
 from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 
-from mapper import analyser
+from mapper import analyser, graph, graph_loader
 
 console = Console()
 
@@ -75,8 +75,17 @@ def start(
     default_exclusions = ["*/__pycache__/*", "*.pyc", "*/.venv/*", "*/.git/*"]
     all_exclusions = default_exclusions + (exclude or [])
 
+    # Create Neo4j connection and loader
+    try:
+        connection = graph.Neo4jConnection.from_config()
+        loader = graph_loader.GraphLoader(connection, package_name=project_name)
+    except Exception as e:
+        console.print(f"[red]Failed to connect to Neo4j:[/red] {e}")
+        console.print("[dim]Analysis will continue without storing in database[/dim]\n")
+        loader = None
+
     # Create analyser
-    code_analyser = analyser.Analyser(path, exclude_patterns=all_exclusions)
+    code_analyser = analyser.Analyser(path, exclude_patterns=all_exclusions, loader=loader)
 
     # Progress tracking
     if not quiet:
@@ -114,8 +123,15 @@ def start(
         table.add_row("Classes", str(result.classes_count))
         table.add_row("Functions", str(result.functions_count))
         table.add_row("Relationships", str(result.relationships_count))
+        if result.nodes_created > 0:
+            table.add_row("Nodes Created", str(result.nodes_created))
 
         console.print(table)
+
+        # Neo4j storage confirmation
+        if result.nodes_created > 0:
+            console.print("\n[bold green]Analysis stored in Neo4j[/bold green]")
+            console.print("[dim]View in Neo4j Browser: http://localhost:7474[/dim]")
 
         # Warnings
         if result.warnings:

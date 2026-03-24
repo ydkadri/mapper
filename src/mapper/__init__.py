@@ -6,6 +6,7 @@ from mapper import (
     ast_parser,
     config_manager,
     graph,
+    graph_loader,
     parser,
     status_checker,
     type_inference,
@@ -13,6 +14,7 @@ from mapper import (
 
 # Public classes from modules
 from mapper.graph import Neo4jConnection
+from mapper.graph_loader import GraphLoader
 from mapper.parser import ASTParser
 
 __version__ = "0.4.2"
@@ -25,10 +27,12 @@ __all__ = [
     "ast_parser",
     "config_manager",
     "graph",
+    "graph_loader",
     "parser",
     "status_checker",
     "type_inference",
     # Classes
     "ASTParser",
+    "GraphLoader",
     "Neo4jConnection",
 ]

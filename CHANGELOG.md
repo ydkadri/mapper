@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Graph storage** - Analysis results now persisted to Neo4j database
+  - `graph_loader` package for loading AST extractions into Neo4j
+  - `GraphLoader` class creates nodes (Module, Class, Function, Method) and relationships (DEFINES, CONTAINS, INHERITS, CALLS, IMPORTS)
+  - Deferred relationship creation for cross-file references (inheritance, function calls, imports)
+  - Integrated into `mapper analyse start` command - automatically stores results when Neo4j connection available
+  - Analyser accepts optional `GraphLoader` instance for graph persistence
+  - Display nodes created count and Neo4j Browser link in CLI output
+  - 12 unit tests for graph loader
+  - 5 integration tests for end-to-end graph storage
+  - Technical documentation: `docs/technical/graph_loader.md`
+- **Analysis result tracking** - New `nodes_created` field in `AnalyseResult` model
+
+### Changed
+- **Analyser** now supports optional graph storage via `GraphLoader` parameter
+- **CLI analyse command** creates Neo4j connection and loader automatically
+- **CLI output** shows Neo4j storage confirmation and node count when storage enabled
+
 ## [0.4.2] - 2026-03-24
 
 ### Added
