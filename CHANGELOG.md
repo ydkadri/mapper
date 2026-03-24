@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.9] - 2026-03-24
+
+### Added
+- **Visibility tracking** in AST parser for public/private detection
+  - Added `is_public` boolean field to `FunctionInfo` and `ClassInfo`
+  - Follows Python naming conventions: `_private`, `public`, `__dunder__` (public)
+  - Enables future antipattern analysis (e.g., private methods called from outside their class)
+  - Added comprehensive test coverage for visibility detection
+  - Total test count increased to 80 tests
+
 ## [0.4.8] - 2026-03-24
 
 ### Added
