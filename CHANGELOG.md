@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-03-24
+
 ### Added
 - **Graph storage** - Analysis results now persisted to Neo4j database
   - `graph_loader` package for loading AST extractions into Neo4j
