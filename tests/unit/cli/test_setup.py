@@ -18,7 +18,9 @@ class TestInitCommand:
 
         result = runner.invoke(app, ["init"])
         assert result.exit_code == 1
-        assert "NEO4J_USER and NEO4J_PASSWORD environment variables must be set" in result.stdout
+        assert "Missing credentials" in result.stdout
+        assert "NEO4J_USER" in result.stdout
+        assert "NEO4J_PASSWORD" in result.stdout
 
     def test_init_command_help(self):
         """Test init command help is accessible."""
