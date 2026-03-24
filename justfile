@@ -1,3 +1,7 @@
+# ==============================================================================
+# Setup & Help
+# ==============================================================================
+
 # List all available commands
 default:
     @just --list
@@ -6,6 +10,10 @@ default:
 install:
     uv sync
     uv run pre-commit install
+
+# ==============================================================================
+# Docker
+# ==============================================================================
 
 # Build Docker containers
 build:
@@ -40,6 +48,27 @@ logs service="":
         docker-compose logs -f {{service}}; \
     fi
 
+# Rebuild and restart containers
+restart: down build up
+
+# Full reset: stop containers, remove volumes, rebuild, and start
+reset:
+    docker-compose down -v
+    docker-compose build
+    docker-compose up -d
+    @echo ""
+    @echo "✅ Environment reset complete!"
+    @echo ""
+    @echo "🌐 Service URLs:"
+    @echo "   Neo4j Browser: http://localhost:7474 (neo4j/devpassword)"
+    @echo "   Backend API:   http://localhost:8080/api/"
+    @echo "   Web UI:        http://localhost:3000"
+    @echo ""
+
+# ==============================================================================
+# Development
+# ==============================================================================
+
 # Run CLI tool
 mapper *args:
     uv run mapper {{args}}
@@ -49,21 +78,41 @@ format:
     uv run ruff format .
     uv run isort .
 
-# Lint code (check only, no fixes)
-lint:
-    uv run ruff format --check .
-    uv run isort --check-only .
-    uv run ruff check .
-    uv run mypy .
-
 # Fix all auto-fixable issues
 fix:
     uv run ruff format .
     uv run isort .
     uv run ruff check --fix .
 
+# ==============================================================================
+# Linting
+# ==============================================================================
+
+# Check code formatting (ruff format)
+lint-format:
+    uv run ruff format --check .
+
+# Check import sorting (isort)
+lint-imports:
+    uv run isort --check-only .
+
+# Check code quality (ruff)
+lint-ruff:
+    uv run ruff check .
+
+# Check type hints (mypy)
+lint-types:
+    uv run mypy .
+
+# Run all linting checks
+lint: lint-format lint-imports lint-ruff lint-types
+
 # Run all code quality checks (alias for lint)
 quality: lint
+
+# ==============================================================================
+# Testing
+# ==============================================================================
 
 # Run all tests (unit + integration)
 test *args:
@@ -81,6 +130,10 @@ test-integration *args:
 test-coverage:
     uv run pytest tests/unit --cov=src/mapper --cov-report=html --cov-report=term --cov-report=json --cov-fail-under=65
 
+# ==============================================================================
+# Maintenance
+# ==============================================================================
+
 # Clean up generated files
 clean:
     find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
@@ -89,8 +142,9 @@ clean:
     find . -type f -name "*.coverage" -delete
     rm -rf htmlcov/ .coverage .pytest_cache/ .mypy_cache/ .ruff_cache/
 
-# Rebuild and restart containers
-restart: down build up
+# ==============================================================================
+# Versioning
+# ==============================================================================
 
 # Show current version
 version-show:
@@ -128,17 +182,3 @@ version part="":
     else \
         uv run bump-my-version bump {{part}}; \
     fi
-
-# Full reset: stop containers, remove volumes, rebuild, and start
-reset:
-    docker-compose down -v
-    docker-compose build
-    docker-compose up -d
-    @echo ""
-    @echo "✅ Environment reset complete!"
-    @echo ""
-    @echo "🌐 Service URLs:"
-    @echo "   Neo4j Browser: http://localhost:7474 (neo4j/devpassword)"
-    @echo "   Backend API:   http://localhost:8080/api/"
-    @echo "   Web UI:        http://localhost:3000"
-    @echo ""

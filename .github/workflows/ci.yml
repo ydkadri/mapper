@@ -27,8 +27,17 @@ jobs:
       - name: Install dependencies
         run: uv sync
 
-      - name: Run linting
-        run: just lint
+      - name: Check code formatting
+        run: just lint-format
+
+      - name: Check import sorting
+        run: just lint-imports
+
+      - name: Check code quality
+        run: just lint-ruff
+
+      - name: Check type hints
+        run: just lint-types
 
   test:
     runs-on: ubuntu-latest
