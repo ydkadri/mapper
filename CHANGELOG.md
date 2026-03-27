@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.4] - 2026-03-27
+
+### Added
+- **Neo4j Schema Documentation** - Complete reference for graph database schema
+  - Comprehensive schema reference (`docs/technical/neo4j-schema.md`)
+  - Detailed documentation for all node types: Module, Class, Function, Method
+  - Complete property tables with types, requirements, and examples
+  - All relationship types documented: DEFINES, CONTAINS, INHERITS, CALLS, IMPORTS
+  - Constraint documentation: uniqueness constraints on path and fqn
+  - Index documentation: name indexes, type index, implicit indexes
+  - Schema initialization guide (automatic via `mapper init` and manual via Python API)
+  - Schema evolution roadmap:
+    - v0.6.0: Structured property storage (#30)
+    - v0.8.0: Cross-package relationships (#29)
+    - Future: External file tracking (#41), version tracking
+  - Migration strategy for breaking and non-breaking changes
+  - Query best practices: labels, constraints, early filtering, bounded paths, parameters
+  - Cross-referenced with Graph Loader, Cypher Cookbook, and user journey docs
+
 ## [0.5.3] - 2026-03-27
 
 ### Added
