@@ -1,546 +1,706 @@
-# Neo4j Graph Schema
+# Neo4j Schema Reference
 
-This document describes the Neo4j database schema used by Mapper, including node types, relationships, constraints, and indexes.
+Complete schema reference for Mapper's Neo4j graph database, including node types, properties, relationships, constraints, and indexes.
+
+---
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Node Types](#node-types)
+- [Relationship Types](#relationship-types)
+- [Constraints](#constraints)
+- [Indexes](#indexes)
+- [Schema Initialization](#schema-initialization)
+- [Schema Evolution](#schema-evolution)
+- [Querying Best Practices](#querying-best-practices)
+
+---
 
 ## Overview
 
-Mapper creates and maintains a graph database schema optimized for querying Python code structure and relationships. The schema is initialized automatically by `mapper init` and is designed to be:
+Mapper stores Python code structure in Neo4j using a graph model where:
+- **Nodes** represent code entities (modules, classes, functions, methods)
+- **Relationships** represent connections (defines, contains, inherits, calls, imports)
+- **Properties** store metadata about each entity
 
-- **Idempotent**: Safe to run multiple times
-- **Performance-optimized**: Indexes on frequently queried fields
-- **Data integrity**: Uniqueness constraints prevent duplicates
-- **Extensible**: Easy to add new node types and relationships
+The schema is designed for:
+- **Fast querying** via strategic indexes and constraints
+- **Referential integrity** via uniqueness constraints on FQNs
+- **Multi-package support** via package property on all nodes
+- **Version tracking** (future) via package versioning
 
-## Schema Initialization
-
-### When Is Schema Created?
-
-The schema is created during the interactive setup:
-
-```bash
-mapper init
-# Step 4: Initialize database schema (constraints and indexes)? [y/n] (y): y
-```
-
-### What Gets Created?
-
-1. **3 Uniqueness Constraints**
-   - Prevent duplicate nodes
-   - Automatically create backing indexes
-
-2. **4 Additional Indexes**
-   - Speed up common queries
-   - Support filtering and searching
-
-### Idempotency
-
-The initialization code uses `IF NOT EXISTS` clauses, making it safe to run multiple times:
-
-```cypher
-CREATE CONSTRAINT module_path_unique IF NOT EXISTS
-FOR (m:Module) REQUIRE m.path IS UNIQUE
-```
-
-If a constraint or index already exists, it's skipped without error.
+---
 
 ## Node Types
 
-Mapper will use the following node types (currently constraints/indexes only):
-
 ### Module
 
-Represents a Python file/module.
+Represents a Python file (`.py`).
 
-**Labels:** `Module`
+**Label**: `Module`
 
-**Properties:**
-- `path` (string, **unique**): Absolute file path
-- `name` (string, **indexed**): Module name (e.g., `myapp.utils`)
-- `type` (string, **indexed**): Module type (e.g., `package`, `module`)
+**Properties**:
 
-**Example:**
+| Property | Type | Required | Description | Example |
+|----------|------|----------|-------------|---------|
+| `name` | string | Yes | Module name (filename without .py) | `"handlers"` |
+| `path` | string | Yes | Full file path (UNIQUE) | `"src/handlers.py"` |
+| `fqn` | string | Yes | Fully qualified name | `"myapp.handlers"` |
+| `package` | string | Yes | Package this module belongs to | `"my-project"` |
+| `type` | string | Yes | Always `"module"` | `"module"` |
+| `docstring` | string | No | Module-level docstring | `"Handler functions"` |
+
+**Constraints**:
+- **Uniqueness**: `path` must be unique across all modules
+
+**Indexes**:
+- `name` - Fast lookups by module name
+- `type` - Fast filtering by node type
+
+**Example**:
 ```cypher
-(:Module {
-  path: "/Users/alice/project/src/myapp/utils.py",
-  name: "myapp.utils",
-  type: "module"
+CREATE (m:Module {
+  name: "handlers",
+  path: "src/myapp/handlers.py",
+  fqn: "myapp.handlers",
+  package: "my-project",
+  type: "module",
+  docstring: "HTTP request handlers"
 })
 ```
+
+---
 
 ### Class
 
-Represents a Python class definition.
+Represents a class definition.
 
-**Labels:** `Class`
+**Label**: `Class`
 
-**Properties:**
-- `fqn` (string, **unique**): Fully qualified name (e.g., `myapp.utils.Helper`)
-- `name` (string, **indexed**): Class name (e.g., `Helper`)
-- `lineno` (integer): Line number where class is defined
+**Properties**:
 
-**Example:**
+| Property | Type | Required | Description | Example |
+|----------|------|----------|-------------|---------|
+| `name` | string | Yes | Class name | `"UserService"` |
+| `fqn` | string | Yes | Fully qualified name (UNIQUE) | `"services.UserService"` |
+| `package` | string | Yes | Package name | `"my-project"` |
+| `is_public` | boolean | Yes | Public vs private (naming) | `true` |
+| `docstring` | string | No | Class docstring | `"User management service"` |
+| `bases` | string | No | Serialized base classes* | `"['BaseService', 'Protocol']"` |
+| `decorators` | string | No | Serialized decorators* | `"['@dataclass']"` |
+
+**Constraints**:
+- **Uniqueness**: `fqn` must be unique across all classes
+
+**Indexes**:
+- `name` - Fast lookups by class name
+- `package` - Filter by package
+- `is_public` - Filter public/private
+
+**Example**:
 ```cypher
-(:Class {
-  fqn: "myapp.utils.Helper",
-  name: "Helper",
-  lineno: 42
+CREATE (c:Class {
+  name: "UserService",
+  fqn: "services.UserService",
+  package: "my-project",
+  is_public: true,
+  docstring: "Handles user operations",
+  bases: "['BaseService']",
+  decorators: "[]"
 })
 ```
+
+**Notes**:
+- *`bases` and `decorators` are string-serialized lists (improvement tracked in #30)
+- `is_public` determined by naming: `_PrivateClass` → false, `PublicClass` → true
+
+---
 
 ### Function
 
-Represents a Python function or method.
+Represents a top-level function (not in a class).
 
-**Labels:** `Function`
+**Label**: `Function`
 
-**Properties:**
-- `fqn` (string, **unique**): Fully qualified name (e.g., `myapp.utils.calculate`)
-- `name` (string, **indexed**): Function name (e.g., `calculate`)
-- `lineno` (integer): Line number where function is defined
-- `is_async` (boolean): True if async function
+**Properties**:
 
-**Example:**
+| Property | Type | Required | Description | Example |
+|----------|------|----------|-------------|---------|
+| `name` | string | Yes | Function name | `"process_request"` |
+| `fqn` | string | Yes | Fully qualified name (UNIQUE) | `"handlers.process_request"` |
+| `package` | string | Yes | Package name | `"my-project"` |
+| `is_public` | boolean | Yes | Public vs private (naming) | `true` |
+| `docstring` | string | No | Function docstring | `"Process HTTP request"` |
+| `return_type` | string | No | Return type annotation | `"Response"` |
+| `parameters` | string | No | Serialized parameters* | `"['request: Request', 'timeout: int = 30']"` |
+| `decorators` | string | No | Serialized decorators* | `"['@app.post', '@validate']"` |
+
+**Constraints**:
+- **Uniqueness**: `fqn` must be unique across all functions
+
+**Indexes**:
+- `name` - Fast lookups by function name
+- `package` - Filter by package
+- `is_public` - Filter public/private
+
+**Example**:
 ```cypher
-(:Function {
-  fqn: "myapp.utils.calculate",
-  name: "calculate",
-  lineno: 123,
-  is_async: false
+CREATE (f:Function {
+  name: "process_request",
+  fqn: "handlers.process_request",
+  package: "my-project",
+  is_public: true,
+  docstring: "Process incoming HTTP request",
+  return_type: "Response",
+  parameters: "['request: Request', 'timeout: int']",
+  decorators: "['@app.post']"
 })
 ```
 
-## Relationship Types
+**Notes**:
+- *`parameters` and `decorators` are string-serialized (improvement tracked in #30)
+- `is_public` determined by naming: `_private_func` → false, `public_func` → true
 
-(To be implemented - documented for future reference)
+---
+
+### Method
+
+Represents a class method.
+
+**Label**: `Method`
+
+**Properties**: Same as Function
+
+**Difference from Function**:
+- Methods are functions defined within a class
+- Methods have `self` or `cls` as first parameter (stored in `parameters`)
+- Methods are connected to their class via `CONTAINS` relationship
+
+**Example**:
+```cypher
+CREATE (m:Method {
+  name: "save",
+  fqn: "services.UserService.save",
+  package: "my-project",
+  is_public: true,
+  docstring: "Save user to database",
+  return_type: "None",
+  parameters: "['self', 'user: User']",
+  decorators: "[]"
+})
+```
+
+---
+
+## Relationship Types
 
 ### DEFINES
 
-A module defines a class or function.
+**Pattern**: `(Module)-[:DEFINES]->(Class|Function)`
 
+**Description**: A module defines a class or function at the top level.
+
+**Properties**: None
+
+**Example**:
 ```cypher
-(:Module)-[:DEFINES]->(:Class)
-(:Module)-[:DEFINES]->(:Function)
+MATCH (m:Module {fqn: "handlers"}), (f:Function {fqn: "handlers.process_request"})
+CREATE (m)-[:DEFINES]->(f)
 ```
+
+**Use cases**:
+- Find what classes/functions are defined in a module
+- Navigate from module to its contents
+
+---
 
 ### CONTAINS
 
-A class contains a method (function).
+**Pattern**: `(Class)-[:CONTAINS]->(Method)`
 
+**Description**: A class contains a method.
+
+**Properties**: None
+
+**Example**:
 ```cypher
-(:Class)-[:CONTAINS]->(:Function)
+MATCH (c:Class {fqn: "services.UserService"}), (m:Method {fqn: "services.UserService.save"})
+CREATE (c)-[:CONTAINS]->(m)
 ```
 
-### IMPORTS
+**Use cases**:
+- Find all methods in a class
+- Navigate from class to its methods
 
-A module imports another module.
-
-```cypher
-(:Module)-[:IMPORTS]->(:Module)
-```
-
-**Properties:**
-- `import_type` (string): `direct`, `from`, `relative`
-- `alias` (string, optional): Import alias if used
+---
 
 ### INHERITS
 
-A class inherits from another class.
+**Pattern**: `(Class)-[:INHERITS]->(Class)`
 
+**Description**: A class inherits from another class (parent/base class).
+
+**Properties**: None
+
+**Example**:
 ```cypher
-(:Class)-[:INHERITS]->(:Class)
+MATCH (child:Class {fqn: "models.User"}), (parent:Class {fqn: "models.BaseModel"})
+CREATE (child)-[:INHERITS]->(parent)
 ```
 
-**Properties:**
-- `order` (integer): Position in inheritance list (0-based)
+**Use cases**:
+- Find class hierarchy
+- Trace inheritance chains
+- Find all subclasses of a class
+
+**Notes**:
+- Relationships created during `finalize()` step (deferred)
+- Only tracks inheritance within the same package
+- External base classes (e.g., `Exception`) not stored as nodes
+
+---
 
 ### CALLS
 
-A function calls another function.
+**Pattern**: `(Function|Method)-[:CALLS]->(Function|Method)`
 
+**Description**: A function or method calls another function or method.
+
+**Properties**: None
+
+**Example**:
 ```cypher
-(:Function)-[:CALLS]->(:Function)
+MATCH (caller:Function {fqn: "handlers.process_request"}),
+      (callee:Function {fqn: "utils.validate_input"})
+CREATE (caller)-[:CALLS]->(callee)
 ```
 
-**Properties:**
-- `lineno` (integer): Line number where call occurs
+**Use cases**:
+- Trace function call chains
+- Find callers of a function (reverse dependencies)
+- Analyze coupling and dependencies
+- Detect unused functions
 
-### DECORATES
+**Notes**:
+- Relationships created during `finalize()` step (deferred)
+- Only tracks calls within the same package
+- Calls to external libraries not stored
 
-A decorator decorates a function or class.
+---
 
+### IMPORTS
+
+**Pattern**: `(Module)-[:IMPORTS]->(Module)`
+
+**Description**: A module imports another module.
+
+**Properties**: None
+
+**Example**:
 ```cypher
-(:Function)-[:DECORATES]->(:Function)
-(:Function)-[:DECORATES]->(:Class)
+MATCH (m1:Module {fqn: "handlers"}), (m2:Module {fqn: "services"})
+CREATE (m1)-[:IMPORTS]->(m2)
 ```
+
+**Use cases**:
+- Analyze module dependencies
+- Find circular imports
+- Trace transitive dependencies
+
+**Notes**:
+- Relationships created during `finalize()` step (deferred)
+- Only tracks imports within the same package
+- External imports (e.g., `typing`, `json`) not stored
+
+---
 
 ## Constraints
 
-Constraints enforce data integrity and prevent duplicate nodes.
+Constraints ensure data integrity and enable fast lookups. Created automatically by `mapper init`.
 
-### module_path_unique
+### Module Path Uniqueness
 
-**Purpose:** Ensure each file path appears only once in the graph.
-
-**Type:** Uniqueness constraint
-
-**Cypher:**
 ```cypher
 CREATE CONSTRAINT module_path_unique IF NOT EXISTS
 FOR (m:Module) REQUIRE m.path IS UNIQUE
 ```
 
-**Why:** Prevents multiple nodes for the same file when re-analyzing code.
+**Purpose**: Ensure each file path appears only once in the database.
 
-**Effect:** Also creates a backing index on `Module.path`.
+**Impact**: Prevents duplicate module entries.
 
-### class_fqn_unique
+---
 
-**Purpose:** Ensure each fully qualified class name appears only once.
+### Class FQN Uniqueness
 
-**Type:** Uniqueness constraint
-
-**Cypher:**
 ```cypher
 CREATE CONSTRAINT class_fqn_unique IF NOT EXISTS
 FOR (c:Class) REQUIRE c.fqn IS UNIQUE
 ```
 
-**Why:** Prevents duplicate class nodes. A class is uniquely identified by its fully qualified name (e.g., `myapp.models.User`).
+**Purpose**: Ensure each class fully qualified name is unique.
 
-**Effect:** Also creates a backing index on `Class.fqn`.
+**Impact**:
+- Prevents duplicate class entries
+- Enables fast lookups by FQN
+- Automatically creates index on `c.fqn`
 
-### function_fqn_unique
+---
 
-**Purpose:** Ensure each fully qualified function name appears only once.
+### Function FQN Uniqueness
 
-**Type:** Uniqueness constraint
-
-**Cypher:**
 ```cypher
 CREATE CONSTRAINT function_fqn_unique IF NOT EXISTS
 FOR (f:Function) REQUIRE f.fqn IS UNIQUE
 ```
 
-**Why:** Prevents duplicate function nodes. Functions and methods are uniquely identified by their fully qualified name (e.g., `myapp.utils.calculate`).
+**Purpose**: Ensure each function fully qualified name is unique.
 
-**Effect:** Also creates a backing index on `Function.fqn`.
+**Impact**:
+- Prevents duplicate function entries (includes methods)
+- Enables fast lookups by FQN
+- Automatically creates index on `f.fqn`
+
+**Note**: This constraint applies to both Function and Method nodes since they share the same label pattern.
+
+---
 
 ## Indexes
 
-Indexes speed up queries by allowing Neo4j to quickly locate nodes without scanning the entire graph.
+Indexes improve query performance. Created automatically by `mapper init`.
 
-### Indexes Created by Constraints
+### Name Indexes
 
-These are automatically created:
-
-1. **Index on Module.path** (from `module_path_unique`)
-2. **Index on Class.fqn** (from `class_fqn_unique`)
-3. **Index on Function.fqn** (from `function_fqn_unique`)
-
-### Additional Performance Indexes
-
-### module_name_index
-
-**Purpose:** Speed up queries filtering by module name.
-
-**Cypher:**
 ```cypher
-CREATE INDEX module_name_index IF NOT EXISTS
-FOR (m:Module) ON (m.name)
+CREATE INDEX module_name_index IF NOT EXISTS FOR (m:Module) ON (m.name);
+CREATE INDEX class_name_index IF NOT EXISTS FOR (c:Class) ON (c.name);
+CREATE INDEX function_name_index IF NOT EXISTS FOR (f:Function) ON (f.name);
 ```
 
-**Use cases:**
-- Find all modules in a package: `MATCH (m:Module) WHERE m.name STARTS WITH 'myapp.models'`
-- Search for modules: `MATCH (m:Module) WHERE m.name CONTAINS 'utils'`
+**Purpose**: Fast lookups by name (without FQN).
 
-### class_name_index
+**Use case**: Finding entities by simple name across packages.
 
-**Purpose:** Speed up queries filtering by class name.
-
-**Cypher:**
+**Example query**:
 ```cypher
-CREATE INDEX class_name_index IF NOT EXISTS
-FOR (c:Class) ON (c.name)
+MATCH (f:Function {name: "process"})
+RETURN f.fqn, f.package
 ```
 
-**Use cases:**
-- Find all classes with a specific name: `MATCH (c:Class {name: 'User'})`
-- Pattern matching: `MATCH (c:Class) WHERE c.name ENDS WITH 'Model'`
+---
 
-### function_name_index
+### Type Index
 
-**Purpose:** Speed up queries filtering by function name.
-
-**Cypher:**
 ```cypher
-CREATE INDEX function_name_index IF NOT EXISTS
-FOR (f:Function) ON (f.name)
+CREATE INDEX module_type_index IF NOT EXISTS FOR (m:Module) ON (m.type);
 ```
 
-**Use cases:**
-- Find all functions with a specific name: `MATCH (f:Function {name: 'process'})`
-- Find main entry points: `MATCH (f:Function {name: '__main__'})`
+**Purpose**: Fast filtering by node type.
 
-### module_type_index
+**Use case**: Distinguish modules from other node types in mixed queries.
 
-**Purpose:** Speed up queries filtering by module type.
+---
 
-**Cypher:**
+### Package Index (Implicit)
+
+The `package` property is frequently queried, and Neo4j query planner may create implicit indexes.
+
+**Recommended manual index** (future enhancement):
 ```cypher
-CREATE INDEX module_type_index IF NOT EXISTS
-FOR (m:Module) ON (m.type)
+CREATE INDEX package_index IF NOT EXISTS FOR (n) ON (n.package);
 ```
 
-**Use cases:**
-- Find all packages: `MATCH (m:Module {type: 'package'})`
-- Separate packages from modules: `MATCH (m:Module) WHERE m.type IN ['package']`
+**Use case**: Filter nodes by package in all queries.
 
-## Verifying Schema
+---
 
-### Via Neo4j Browser
+### Visibility Index (Implicit)
 
-1. Open http://localhost:7474
-2. Login with credentials
-3. Run these queries:
+The `is_public` property is queried for API surface analysis.
 
-**Show all constraints:**
+**Recommended manual index** (future enhancement):
 ```cypher
-SHOW CONSTRAINTS
+CREATE INDEX visibility_index IF NOT EXISTS FOR (n) ON (n.is_public);
 ```
 
-Expected output:
-```
-╒═══════════════════════╤════════════╤═════════╤════════════════════════════════╕
-│ name                  │ type       │ labels  │ properties                     │
-╞═══════════════════════╪════════════╪═════════╪════════════════════════════════╡
-│ module_path_unique    │ UNIQUENESS │ Module  │ ["path"]                       │
-│ class_fqn_unique      │ UNIQUENESS │ Class   │ ["fqn"]                        │
-│ function_fqn_unique   │ UNIQUENESS │ Function│ ["fqn"]                        │
-╘═══════════════════════╧════════════╧═════════╧════════════════════════════════╛
-```
+**Use case**: Find public vs private entities efficiently.
 
-**Show all indexes:**
-```cypher
-SHOW INDEXES
-```
+---
 
-Expected output: 7 indexes total
-- 3 from constraints (path, fqn, fqn)
-- 4 additional (name, name, name, type)
+## Schema Initialization
 
-### Via CLI
+### Automatic Initialization
+
+Schema is created automatically by `mapper init`:
 
 ```bash
-docker exec mapper-neo4j-1 cypher-shell -u neo4j -p devpassword "SHOW CONSTRAINTS;"
-docker exec mapper-neo4j-1 cypher-shell -u neo4j -p devpassword "SHOW INDEXES;"
+mapper init
 ```
 
-## Implementation
+This command:
+1. Connects to Neo4j
+2. Creates all constraints (idempotent)
+3. Creates all indexes (idempotent)
+4. Saves configuration to file
 
-### Module: `src/mapper/graph.py`
+### Manual Initialization
 
-**Function:** `Neo4jConnection.initialize_database()`
+You can manually initialize the schema via Python:
 
 ```python
-def initialize_database(self) -> None:
-    """Initialize database schema with constraints and indexes (idempotent)."""
-    with self.driver.session() as session:
-        # Create uniqueness constraints (also creates indexes)
-        constraints = [
-            "CREATE CONSTRAINT module_path_unique IF NOT EXISTS "
-            "FOR (m:Module) REQUIRE m.path IS UNIQUE",
+from mapper import graph
 
-            "CREATE CONSTRAINT class_fqn_unique IF NOT EXISTS "
-            "FOR (c:Class) REQUIRE c.fqn IS UNIQUE",
-
-            "CREATE CONSTRAINT function_fqn_unique IF NOT EXISTS "
-            "FOR (f:Function) REQUIRE f.fqn IS UNIQUE",
-        ]
-
-        for constraint in constraints:
-            session.run(constraint)
-
-        # Create additional indexes for common queries
-        indexes = [
-            "CREATE INDEX module_name_index IF NOT EXISTS "
-            "FOR (m:Module) ON (m.name)",
-
-            "CREATE INDEX class_name_index IF NOT EXISTS "
-            "FOR (c:Class) ON (c.name)",
-
-            "CREATE INDEX function_name_index IF NOT EXISTS "
-            "FOR (f:Function) ON (f.name)",
-
-            "CREATE INDEX module_type_index IF NOT EXISTS "
-            "FOR (m:Module) ON (m.type)",
-        ]
-
-        for index in indexes:
-            session.run(index)
-```
-
-### Why These Specific Constraints/Indexes?
-
-**Uniqueness constraints** prevent common errors:
-- Re-running analysis shouldn't create duplicate nodes
-- Import cycles should link to existing nodes
-- Incremental updates should update, not duplicate
-
-**Name indexes** support common queries:
-- "Show me all classes named 'User'" (might be in multiple modules)
-- "Find all test functions" (name starts with `test_`)
-- "List all utility modules" (name contains `util`)
-
-**Type index** enables filtering:
-- "Show only packages, not individual modules"
-- "Analyze only application code, not tests"
-
-## Best Practices
-
-### When Analyzing Code
-
-✅ **Do initialize schema before first analysis:**
-```bash
-mapper init  # Creates schema
-mapper analyze /path/to/code  # Safe, uses schema
-```
-
-✅ **Do rely on uniqueness constraints:**
-```python
-# This is safe - constraint prevents duplicates
-MERGE (m:Module {path: $path})
-SET m.name = $name, m.type = $type
-```
-
-❌ **Don't bypass constraints:**
-```python
-# DON'T: Creates duplicates if path already exists
-CREATE (m:Module {path: $path, name: $name})
-```
-
-### When Querying
-
-✅ **Do use indexed properties in WHERE clauses:**
-```cypher
-# Fast - uses class_name_index
-MATCH (c:Class)
-WHERE c.name = 'User'
-RETURN c
-
-# Fast - uses module_name_index
-MATCH (m:Module)
-WHERE m.name STARTS WITH 'myapp.'
-RETURN m
-```
-
-❌ **Don't filter on non-indexed properties without reason:**
-```cypher
-# Slow - no index on lineno
-MATCH (c:Class)
-WHERE c.lineno > 100
-RETURN c
-
-# Better - filter after indexed lookup
-MATCH (c:Class)
-WHERE c.name = 'User' AND c.lineno > 100
-RETURN c
-```
-
-### When Updating Schema
-
-If you need to add new constraints or indexes:
-
-1. **Add to `Neo4jConnection.initialize_database()`**
-2. **Use `IF NOT EXISTS` for idempotency**
-3. **Test on development database first**
-4. **Run `mapper init` again (or call initialize manually)**
-
-Example:
-```python
-# Add new constraint
-constraints.append(
-    "CREATE CONSTRAINT import_unique IF NOT EXISTS "
-    "FOR (i:Import) REQUIRE (i.source, i.target) IS UNIQUE"
+# Connect to Neo4j
+connection = graph.Neo4jConnection(
+    uri="bolt://localhost:7687",
+    user="neo4j",
+    password="devpassword",
+    database="neo4j"
 )
+
+# Initialize schema
+connection.initialize_database()
 ```
 
-## Troubleshooting
+### Verifying Schema
 
-### Constraint Violations
+Check that constraints and indexes exist:
 
-**Symptom:** Error when creating nodes:
-```
-Node already exists with label `Module` and property `path`
-```
-
-**Cause:** Trying to CREATE instead of MERGE.
-
-**Solution:** Use MERGE to update existing nodes:
 ```cypher
-MERGE (m:Module {path: $path})
-SET m.name = $name
+// Show all constraints
+SHOW CONSTRAINTS;
+
+// Show all indexes
+SHOW INDEXES;
 ```
 
-### Slow Queries
+---
 
-**Symptom:** Queries taking several seconds.
+## Schema Evolution
 
-**Cause:** Filtering on non-indexed properties.
+### Current Version: v0.5.0
 
-**Solution:**
-1. Check query plan: `EXPLAIN MATCH ... RETURN ...`
-2. Look for "NodeByLabelScan" (slow) vs "NodeIndexSeek" (fast)
-3. Add index on filtered property if needed
-4. Rewrite query to filter on indexed properties first
+**Nodes**: Module, Class, Function, Method
+**Relationships**: DEFINES, CONTAINS, INHERITS, CALLS, IMPORTS
+**Constraints**: path (Module), fqn (Class, Function)
+**Indexes**: name (all types), type (Module)
 
-### Missing Schema
+### Planned Improvements
 
-**Symptom:** No constraints or indexes in database.
+#### v0.6.0: Structured Property Storage (#30)
 
-**Cause:** Skipped initialization or dropped constraints manually.
+**Problem**: Properties like `parameters`, `decorators`, and `bases` are string-serialized lists.
 
-**Solution:** Run init again:
-```bash
-mapper init  # Answer 'y' to initialize database
+**Solution**: Store as structured data:
+
+**Option 1: JSON properties**
+```cypher
+// Store as JSON string, query with apoc functions
+CREATE (f:Function {
+  name: "process",
+  parameters: '{"args": [{"name": "request", "type": "Request"}]}'
+})
 ```
 
-Or initialize programmatically:
+**Option 2: Separate nodes**
+```cypher
+// Create Parameter nodes
+CREATE (f:Function {name: "process"})
+CREATE (p:Parameter {name: "request", type: "Request", position: 0})
+CREATE (f)-[:HAS_PARAMETER]->(p)
+```
+
+**Option 3: Array properties**
+```cypher
+// Store as Cypher arrays (simple types only)
+CREATE (f:Function {
+  name: "process",
+  parameter_names: ["request", "timeout"],
+  parameter_types: ["Request", "int"]
+})
+```
+
+#### v0.8.0: Cross-Package Relationships (#29)
+
+**Problem**: Relationships only tracked within same package.
+
+**Solution**: Store package as relationship property:
+
+```cypher
+CREATE (f1:Function {fqn: "pkg1.handler", package: "pkg1"})
+CREATE (f2:Function {fqn: "pkg2.utils", package: "pkg2"})
+CREATE (f1)-[:CALLS {from_package: "pkg1", to_package: "pkg2"}]->(f2)
+```
+
+This enables:
+- Cross-package dependency analysis
+- Package-level architecture queries
+- Multi-package impact analysis
+
+#### Future: External File Tracking (#41)
+
+**New node type**: `ExternalFile`
+
+```cypher
+CREATE (f:ExternalFile {
+  path: "templates/email.html",
+  type: "template",
+  package: "my-project"
+})
+CREATE (func:Function {fqn: "handlers.send_email"})-[:REFERENCES]->(f)
+```
+
+#### Future: Version Tracking
+
+**Property additions**:
+```cypher
+CREATE (m:Module {
+  name: "handlers",
+  package: "my-project",
+  version: "0.5.0",
+  analyzed_at: datetime("2026-03-27T10:30:00Z")
+})
+```
+
+**Enables**:
+- Historical analysis
+- Version comparison
+- Incremental updates
+
+### Migration Strategy
+
+#### Non-Breaking Changes
+
+Add new properties, nodes, or relationships without removing old ones:
+- Old queries continue to work
+- New queries can use new features
+- No migration needed
+
+**Example**: Adding `version` property:
+```cypher
+// Old queries still work
+MATCH (m:Module {package: "my-project"}) RETURN m
+
+// New queries can filter by version
+MATCH (m:Module {package: "my-project", version: "0.5.0"}) RETURN m
+```
+
+#### Breaking Changes
+
+When removing or renaming properties:
+
+1. **Add new property**, keep old one:
+   ```cypher
+   // Both old and new queries work
+   MATCH (f:Function) RETURN f.parameters, f.parameter_list
+   ```
+
+2. **Deprecation period** (2 versions):
+   - Document old property as deprecated
+   - Update internal code to use new property
+
+3. **Remove old property**:
+   ```cypher
+   MATCH (f:Function) REMOVE f.parameters
+   ```
+
+4. **Update version** in docs
+
+#### Data Migration Script
+
+For major schema changes, provide migration script:
+
 ```python
-from mapper.graph import Neo4jConnection
-from mapper.config_manager import get_neo4j_credentials
+# migrate_v05_to_v06.py
+from mapper import graph
 
-user, password = get_neo4j_credentials()
-conn = Neo4jConnection(uri="bolt://localhost:7687", user=user, password=password)
-conn.initialize_database()
-conn.close()
+connection = graph.Neo4jConnection.from_config()
+
+# Migrate string-serialized parameters to JSON
+with connection.driver.session() as session:
+    result = session.run("""
+        MATCH (f:Function)
+        WHERE f.parameters IS NOT NULL
+        WITH f, apoc.convert.fromJsonList(f.parameters) as param_list
+        SET f.parameter_list = param_list
+    """)
 ```
 
-## Future Extensions
+---
 
-Potential schema additions:
+## Querying Best Practices
 
-### Additional Node Types
+### Use Labels
 
-- **Import**: Represent import statements
-- **Decorator**: Represent decorator usage
-- **Variable**: Represent module-level variables
-- **Docstring**: Represent documentation
+Always specify node labels for better performance:
 
-### Additional Constraints
+```cypher
+// ✅ Good - uses label index
+MATCH (f:Function {package: "my-project"}) RETURN f
 
-- **Composite uniqueness**: `(Module.name, Module.version)` for versioning
-- **Property existence**: Require certain properties to be present
-- **Type constraints**: Ensure properties have correct types (Neo4j 5.9+)
+// ❌ Slow - scans all nodes
+MATCH (n {package: "my-project"}) WHERE n:Function RETURN n
+```
 
-### Additional Indexes
+### Use Constraints for Lookups
 
-- **Composite indexes**: `(Module.name, Module.type)` for combined queries
-- **Full-text indexes**: Search docstrings and comments
-- **Range indexes**: Optimize > < queries on line numbers
+When looking up by FQN, leverage uniqueness constraints:
+
+```cypher
+// ✅ Fast - uses unique constraint index
+MATCH (f:Function {fqn: "handlers.process_request"}) RETURN f
+
+// ❌ Slower - uses name index + filter
+MATCH (f:Function {name: "process_request"})
+WHERE f.fqn CONTAINS "handlers"
+RETURN f
+```
+
+### Filter Early
+
+Push WHERE clauses before traversal:
+
+```cypher
+// ✅ Good - filter before traversal
+MATCH (f:Function {package: "my-project", is_public: true})
+MATCH (f)-[:CALLS]->(target)
+RETURN f, target
+
+// ❌ Less efficient - filter after traversal
+MATCH (f:Function)-[:CALLS]->(target)
+WHERE f.package = "my-project" AND f.is_public = true
+RETURN f, target
+```
+
+### Limit Variable Paths
+
+Always bound variable-length path patterns:
+
+```cypher
+// ✅ Good - bounded depth
+MATCH path = (f)-[:CALLS*1..5]->(target) RETURN path
+
+// ❌ Dangerous - unbounded
+MATCH path = (f)-[:CALLS*]->(target) RETURN path
+```
+
+### Use Parameters
+
+Always parameterize queries for performance and security:
+
+```cypher
+// ✅ Good - parameterized
+MATCH (f:Function {package: $package}) RETURN f
+
+// ❌ Bad - string interpolation
+MATCH (f:Function {package: 'my-project'}) RETURN f
+```
+
+---
 
 ## Related Documentation
 
-- **User Guide**: [Initial Setup](../user-journeys/01-initial-setup.md)
-- **Technical**: [Configuration System](configuration.md)
-- **External**: [Neo4j Constraints](https://neo4j.com/docs/cypher-manual/current/constraints/)
-- **External**: [Neo4j Indexes](https://neo4j.com/docs/cypher-manual/current/indexes/)
+- [Graph Loader](graph_loader.md) - How data is loaded into Neo4j
+- [Cypher Query Cookbook](cypher-queries.md) - Query examples for analysis
+- [Analyzing and Querying Code](../user-journeys/05-analyzing-querying-code.md) - User guide for querying
