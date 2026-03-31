@@ -1,11 +1,34 @@
 """Neo4j graph storage operations."""
 
+from enum import Enum
 from typing import Any, Protocol
 
 from neo4j import GraphDatabase
 from neo4j.exceptions import ServiceUnavailable
 
 from mapper import config_manager
+
+
+class NodeLabel(str, Enum):  # noqa: UP042 - str,Enum for Python 3.10 compatibility
+    """Neo4j node labels for graph entities."""
+
+    MODULE = "Module"
+    CLASS = "Class"
+    FUNCTION = "Function"
+    METHOD = "Method"
+    IMPORT = "Import"
+
+
+class RelationshipType(str, Enum):  # noqa: UP042 - str,Enum for Python 3.10 compatibility
+    """Neo4j relationship types for graph connections."""
+
+    DEFINES = "DEFINES"
+    CONTAINS = "CONTAINS"
+    INHERITS = "INHERITS"
+    CALLS = "CALLS"
+    IMPORTS = "IMPORTS"
+    FROM_MODULE = "FROM_MODULE"
+    DEPENDS_ON = "DEPENDS_ON"
 
 
 class StoresGraph(Protocol):
@@ -106,11 +129,11 @@ class Neo4jConnection:
             for index in indexes:
                 session.run(index)
 
-    def create_node(self, label: str, properties: dict[str, Any]) -> str:
+    def create_node(self, label: NodeLabel, properties: dict[str, Any]) -> str:
         """Create a node in the graph.
 
         Args:
-            label: Node label (e.g., "Module", "Class", "Function")
+            label: Node label (NodeLabel enum)
             properties: Node properties
 
         Returns:
@@ -128,7 +151,7 @@ class Neo4jConnection:
         self,
         from_node_id: str,
         to_node_id: str,
-        rel_type: str,
+        rel_type: RelationshipType,
         properties: dict[str, Any] | None = None,
     ) -> None:
         """Create a relationship between two nodes.
@@ -136,7 +159,7 @@ class Neo4jConnection:
         Args:
             from_node_id: Source node ID
             to_node_id: Target node ID
-            rel_type: Relationship type (e.g., "IMPORTS", "CALLS")
+            rel_type: Relationship type (RelationshipType enum)
             properties: Optional relationship properties
         """
         with self.driver.session(database=self.database) as session:
@@ -177,12 +200,16 @@ class Neo4jConnection:
             record = result.single()
             return record["count"] if record else 0
 
-    def store_node(self, label: str, properties: dict[str, Any]) -> None:
+    def store_node(self, label: NodeLabel, properties: dict[str, Any]) -> None:
         """Store a node in the graph (deprecated, use create_node)."""
         self.create_node(label, properties)
 
     def store_relationship(
-        self, from_node: str, to_node: str, rel_type: str, properties: dict[str, Any] | None = None
+        self,
+        from_node: str,
+        to_node: str,
+        rel_type: RelationshipType,
+        properties: dict[str, Any] | None = None,
     ) -> None:
         """Store a relationship between two nodes (deprecated, use create_relationship)."""
         self.create_relationship(from_node, to_node, rel_type, properties)

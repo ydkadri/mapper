@@ -119,7 +119,7 @@ class TestNameResolver:
         assert resolver.resolve("List") == "typing.List"
 
     @pytest.mark.parametrize(
-        "imports,name_to_resolve,context,expected_original,expected_reason_contains,test_id",
+        "imports,name_to_resolve,context,expected_original,expected_reason,test_id",
         [
             # Name not in imports
             (
@@ -127,7 +127,7 @@ class TestNameResolver:
                 "numpy",
                 "test_func",
                 "numpy",
-                "not found in imports",
+                name_resolver.models.ResolutionFailureReason.NOT_IN_IMPORTS,
                 "not-imported",
             ),
             # Attribute with unknown prefix
@@ -136,7 +136,7 @@ class TestNameResolver:
                 "np.array",
                 None,
                 "np.array",
-                "prefix 'np' not in imports",
+                name_resolver.models.ResolutionFailureReason.NOT_IN_IMPORTS,
                 "unknown-prefix",
             ),
         ],
@@ -148,7 +148,7 @@ class TestNameResolver:
         name_to_resolve,
         context,
         expected_original,
-        expected_reason_contains,
+        expected_reason,
         test_id,
     ):
         """Test that unresolved names return UnresolvedName with correct metadata."""
@@ -159,7 +159,7 @@ class TestNameResolver:
         assert resolved.original_name == expected_original
         if context:
             assert resolved.context == context
-        assert expected_reason_contains in resolved.reason
+        assert resolved.reason == expected_reason
 
     def test_resolve_mixed_imports(self):
         """Test resolving with mixed import patterns."""
