@@ -2,6 +2,7 @@
 
 from mapper.ast_parser import models as ast_models
 from mapper.name_resolver import models
+from mapper.name_resolver.models import ResolutionFailureReason
 
 
 class NameResolver:
@@ -87,7 +88,7 @@ class NameResolver:
                 return models.UnresolvedName(
                     original_name=name,
                     context=context,
-                    reason=f"prefix '{prefix}' not in imports",
+                    reason=ResolutionFailureReason.NOT_IN_IMPORTS,
                 )
 
         # Simple name: direct lookup
@@ -96,7 +97,7 @@ class NameResolver:
 
         # Not found in imports
         return models.UnresolvedName(
-            original_name=name, context=context, reason="not found in imports"
+            original_name=name, context=context, reason=ResolutionFailureReason.NOT_IN_IMPORTS
         )
 
     def resolve_extraction_result(
