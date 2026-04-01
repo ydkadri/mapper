@@ -220,6 +220,8 @@ class TestGraphLoader:
         )
 
         loader = graph_loader.GraphLoader(mock_connection, package_name="test-pkg")
+        # Mock the external module lookup to return None (no existing external modules)
+        loader._find_existing_external_module = Mock(return_value=None)
 
         module_info = ast_parser.models.ModuleInfo(path="test.py", name="test")
         import_info = ast_parser.models.ImportInfo(module="pandas", names=["DataFrame"])
@@ -245,6 +247,8 @@ class TestGraphLoader:
         )
 
         loader = graph_loader.GraphLoader(mock_connection, package_name="test-pkg")
+        # Mock the external module lookup to return None (no existing external modules)
+        loader._find_existing_external_module = Mock(return_value=None)
 
         module_info = ast_parser.models.ModuleInfo(path="test.py", name="test")
         # Multiple imports from same module
@@ -279,6 +283,8 @@ class TestGraphLoader:
         )
 
         loader = graph_loader.GraphLoader(mock_connection, package_name="test-pkg")
+        # Mock the external module lookup to return None (no existing external modules)
+        loader._find_existing_external_module = Mock(return_value=None)
 
         # Module A imports pandas
         module_a = ast_parser.models.ModuleInfo(path="a.py", name="module_a")

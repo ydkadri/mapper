@@ -142,7 +142,7 @@ class Neo4jConnection:
         with self.driver.session(database=self.database) as session:
             # Create node with properties
             props_str = ", ".join(f"{k}: ${k}" for k in properties.keys())
-            query = f"CREATE (n:{label} {{{props_str}}}) RETURN elementId(n) as node_id"
+            query = f"CREATE (n:{label.value} {{{props_str}}}) RETURN elementId(n) as node_id"
             result = session.run(query, parameters=properties)
             record = result.single()
             return str(record["node_id"]) if record else ""
@@ -168,7 +168,7 @@ class Neo4jConnection:
                 query = f"""
                 MATCH (a), (b)
                 WHERE elementId(a) = $from_id AND elementId(b) = $to_id
-                CREATE (a)-[r:{rel_type} {{{props_str}}}]->(b)
+                CREATE (a)-[r:{rel_type.value} {{{props_str}}}]->(b)
                 """
                 params = {"from_id": from_node_id, "to_id": to_node_id}
                 params.update(properties)
@@ -177,7 +177,7 @@ class Neo4jConnection:
                 query = f"""
                 MATCH (a), (b)
                 WHERE elementId(a) = $from_id AND elementId(b) = $to_id
-                CREATE (a)-[r:{rel_type}]->(b)
+                CREATE (a)-[r:{rel_type.value}]->(b)
                 """
                 session.run(query, parameters={"from_id": from_node_id, "to_id": to_node_id})
 
