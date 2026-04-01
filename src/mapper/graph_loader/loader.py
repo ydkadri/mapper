@@ -105,12 +105,30 @@ class GraphLoader:
         relationships between nodes that may have been created in different files.
         """
         for rel_type, from_fqn, to_name in self._deferred_relationships:
+            # Check if from_fqn is an FQN that needs lookup, or already an element ID
             from_id = self._node_ids.get(from_fqn)
             if not from_id:
-                continue  # Source node not found
+                # Assume from_fqn is already an element ID (e.g., for Import nodes)
+                from_id = from_fqn
 
-            # Try to resolve target by FQN first, then by simple name
+            # Try to resolve target by FQN first
             to_id = self._node_ids.get(to_name)
+            if not to_id:
+                # Try stripping package prefix (e.g., "cross_mod.base.Vehicle" -> "base.Vehicle")
+                if to_name.startswith(f"{self.package_name}."):
+                    stripped_name = to_name[len(self.package_name) + 1 :]
+                    to_id = self._node_ids.get(stripped_name)
+            if not to_id:
+                # Handle self.method_name calls - resolve to the containing class method
+                if to_name.startswith("self.") and from_fqn:
+                    # from_fqn is like "test_module.MyClass.method_a"
+                    # Extract class FQN: "test_module.MyClass"
+                    parts = from_fqn.split(".")
+                    if len(parts) >= 2:  # At least Module.Class
+                        class_fqn = ".".join(parts[:-1])  # Remove method name
+                        method_name = to_name[5:]  # Remove "self."
+                        resolved_name = f"{class_fqn}.{method_name}"
+                        to_id = self._node_ids.get(resolved_name)
             if not to_id:
                 # Try finding by simple name (last component of FQN)
                 to_id = self._find_node_by_simple_name(to_name)
@@ -139,10 +157,21 @@ class GraphLoader:
                         raise ValueError(f"Unknown relationship type: {rel_type}")
             elif rel_type in ("from_module", "depends_on"):
                 # External module doesn't exist in graph yet - create External Module node
-                external_node_id = self.connection.create_node(
-                    NodeLabel.MODULE, {"name": to_name, "package": to_name, "is_external": True}
-                )
-                self._node_ids[to_name] = external_node_id
+                # Check if we already created this external module in a previous iteration
+                if to_name not in self._node_ids:
+                    # Check if external module already exists in database (from previous runs)
+                    existing_id = self._find_existing_external_module(to_name)
+                    if existing_id:
+                        external_node_id = existing_id
+                    else:
+                        external_node_id = self.connection.create_node(
+                            NodeLabel.MODULE,
+                            {"name": to_name, "package": to_name, "is_external": True},
+                        )
+
+                    self._node_ids[to_name] = external_node_id
+                else:
+                    external_node_id = self._node_ids[to_name]
                 match rel_type:
                     case "from_module":
                         self.connection.create_relationship(
@@ -169,6 +198,27 @@ class GraphLoader:
             if fqn.endswith(f".{simple_name}") or fqn == simple_name:
                 return node_id
         return None
+
+    def _find_existing_external_module(self, module_name: str) -> str | None:
+        """Find existing external module in database.
+
+        Args:
+            module_name: Name of the external module
+
+        Returns:
+            Node ID if found, None otherwise
+        """
+        with self.connection.driver.session(database=self.connection.database) as session:
+            existing = session.run(
+                """
+                MATCH (m:Module {name: $name, is_external: true})
+                RETURN elementId(m) as id
+                LIMIT 1
+                """,
+                name=module_name,
+            ).single()
+
+            return existing["id"] if existing else None
 
     def _create_module_node(self, module: ast_parser.models.ModuleInfo) -> str:
         """Create a Module node.
