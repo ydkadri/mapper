@@ -77,7 +77,7 @@ jobs:
       neo4j:
         image: neo4j:5-community
         env:
-          NEO4J_AUTH: neo4j/test_password
+          NEO4J_AUTH: neo4j/${{ secrets.NEO4J_TEST_PASSWORD }}
         ports:
           - 7687:7687
         options: >-
@@ -110,5 +110,5 @@ jobs:
           CI: true
           NEO4J_URI: bolt://localhost:7687
           NEO4J_USER: neo4j
-          NEO4J_PASSWORD: test_password
+          NEO4J_PASSWORD: ${{ secrets.NEO4J_TEST_PASSWORD }}
         run: just test-integration
