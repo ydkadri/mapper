@@ -99,69 +99,134 @@ When writing code, always design the interface first, then implement. How someth
 4. Wait for review and feedback
 5. Only then implement internals
 
-### Feature Implementation Order (CRITICAL)
+### Feature Implementation Workflow (CRITICAL)
 
-When implementing new features, **ALWAYS** follow this order:
+**Goal: Small increments, fast feedback, fewer review rounds.**
 
-1. **User journey document** - Write `docs/user-journeys/NN-feature-name.md` first
+Work happens in phases with explicit checkpoints for early alignment.
+
+---
+
+#### Phase 1: Align on Approach
+
+1. Discuss user journey with questions (one at a time)
+2. Write user journey document (`docs/user-journeys/NN-feature-name.md`)
    - Define user goals, workflow, and outcomes
    - Include prerequisites, steps, verification, troubleshooting
    - Update `docs/user-journeys/README.md` index
-   - Create **draft PR** for review before implementation
 
-2. **Interface documentation** - Write `docs/interface/feature-name.md` if adding public APIs
-   - Document the public interface (CLI commands, API endpoints, function signatures)
-   - Include usage examples
-   - Create **draft PR** for review before implementation
+**CHECKPOINT 1**: Push draft PR with user journey doc
+- **Request review**: "User journey complete - validating we're solving the right problem"
+- User validates: Is this the right problem to solve?
 
-3. **Tests** - Write tests before implementation
-   - Test classes grouped by functionality
-   - Cover happy path, edge cases, error handling
-   - Tests in `tests/` mirroring `src/` structure
+---
 
-4. **Application code** - Implement business logic
-   - **Prefer submodules with classes** for complex logic
-   - Separate business logic from presentation (CLI/API)
-   - Example: `src/mapper/analyzer/` package with classes, not flat `analyzer.py` file
+#### Phase 2: Design Interface
 
-5. **CLI command** - Add user-facing command last
-   - CLI should only handle console I/O and call application classes
-   - Keep CLI files thin and readable
+3. Write interface documentation (`docs/interface/feature-name.md`) if adding public APIs
+   - Document public interface (CLI commands, API endpoints, function signatures)
+   - Include usage examples showing how it will be used
 
-6. **Technical documentation** - Document architecture and implementation
-   - Add to `docs/technical/` as needed
-   - Update `docs/technical/README.md` index
+**CHECKPOINT 2**: Push interface docs to same PR
+- **Request review**: "Interface design complete - validating API ergonomics before implementation"
+- User validates: Is the interface clear and well-designed?
 
-### Pull Request Workflow
+---
 
-- **Create draft PRs for review** - Use GitHub's draft PR feature for early feedback
-- **Mark ready when CI passes** - Only mark as ready for review when all checks are green
-- **Every PR includes a version bump** (patch/minor/major) - No exceptions
-- **Clean commit history** - Rebase to create logical feature units before merge
+#### Phase 3: Plan Implementation
 
-**PR Creation Steps:**
-1. Propose version bump type (patch/minor/major) and get confirmation
-2. Run `just version <type>` to bump version
-3. Update "Current Version" in this file
-4. **Write technical documentation** if adding/modifying architecture
-   - Document new modules, patterns, or significant changes in `docs/technical/`
-   - Update `docs/technical/README.md` index
-   - Explain design decisions and integration points
-5. Update CHANGELOG.md with user-facing changes
-6. **Update README.md** if adding features or changing user-facing behavior
-   - Update CLI examples if commands changed
-   - Add new features to feature list
-   - Update usage instructions if needed
-7. **Review existing documentation for accuracy**
-   - Check user journey docs for outdated commands or workflows
-   - Verify technical docs reflect current architecture
-   - Fix any inconsistencies found
-8. Run `just lint` and fix all issues
-9. Run `just test-coverage` and verify coverage passes
-10. Push commits
-11. Create **draft PR** for early review
-12. Wait for CI to pass (use `gh pr view <number> --json statusCheckRollup`)
-13. Mark PR as ready for review
+4. Create implementation plan in ROADMAP.md:
+   ```markdown
+   ## [Feature Name] - Implementation Plan
+   
+   **PR Strategy**: Single PR | Multiple smaller PRs
+   
+   **Commit Structure**:
+   1. [Self-contained unit 1] - what and why
+   2. [Self-contained unit 2] - what and why
+   ...
+   
+   **Review Milestones**:
+   - After Commit X: Why review here? (e.g., "Validate foundation")
+   - After Commit Y: Why review here? (e.g., "Before building on this")
+   - Final: Ready for merge after version bump
+   
+   **Technical Approach**:
+   - Key architectural decisions
+   - Design patterns used
+   - Integration points
+   ```
+
+**CHECKPOINT 3**: Push plan to ROADMAP.md
+- **Request review**: "Implementation plan complete - agreeing on commit structure and milestones"
+- User validates: Agree on granularity, PR strategy, and review points?
+
+---
+
+#### Phase 4: Implement Incrementally
+
+5. Implement according to plan:
+   - Write tests first for each unit
+   - Implement the functionality
+   - Keep commits matching the plan structure
+   - **Keep fixup commits during draft phase** - makes incremental review easier
+
+**Push at planned milestones**:
+- After completing each milestone from plan
+- **Always include context**: "Milestone X complete: [what] - ready for review to [why]"
+- Example: "Foundation complete: base classes and registry - ready for review to validate before building queries on top"
+
+**When to push for milestone review:**
+
+✅ Completed a planned commit/unit
+✅ Foundation work that later work builds on
+✅ Complete feature slice working end-to-end
+✅ Before a major direction change needs validation
+✅ After significant refactor affecting many files
+
+❌ Not after every single commit (too granular)
+❌ Not when stuck on implementation detail (try to solve first)
+
+**PR stays in DRAFT** - Allows fixup commits without breaking review flow
+
+---
+
+#### Phase 5: Finalize
+
+6. Self-validate before asking for final review:
+   - Run `just lint` and fix all issues
+   - Run `just test-coverage` and verify coverage passes
+   - Check all changes against [contributing style guides](#code-standards-reference-)
+   
+7. Update documentation:
+   - CHANGELOG.md with user-facing changes
+   - README.md if features or commands changed
+   - Technical docs in `docs/technical/` if architecture changed
+   - Review existing docs for accuracy
+
+8. Version bump:
+   - Propose version type (patch/minor/major) and get confirmation
+   - Run `just version <type>` to bump version
+   - Update "Current Version" in this file
+
+9. **Rebase to clean commit history**:
+   - Squash fixup commits into their parent commits
+   - Ensure each commit is self-contained and logical
+   - Verify all tests pass after rebase
+
+10. **Mark PR ready for final review**
+    - **Request review**: "Ready for final review - all feedback addressed, tests passing, docs updated"
+    - Wait for CI to pass (use `gh pr view <number> --json statusCheckRollup`)
+
+---
+
+**Key Principles:**
+
+- **3 upfront checkpoints** catch issues when they're cheap to fix
+- **Milestone reviews during implementation** prevent building on wrong foundation  
+- **Draft PR + fixup commits** make incremental review easier
+- **Clean history at the end** via rebase before marking ready
+- **Explicit review requests** with context help reviewer understand what and why
 
 ---
 
@@ -182,49 +247,54 @@ Use descriptive names that explain what the branch does, not just ticket numbers
 
 **NEVER push directly to main** - ALL changes go through PRs. Main branch is protected - direct pushes rejected.
 
-### Commit History (CRITICAL)
+### Commit History
 
-**ALWAYS maintain clean commit history:**
+**Goal: Clean, logical commits that tell a story.**
 
-- **Organize commits as logical feature units**
-  - Each commit = complete, cohesive piece of functionality
-  - Related changes grouped together (feature + tests + docs)
-  - Commits tell a clear story
-  - Reviewers can understand each commit in isolation
+**During draft PR phase:**
+- Fixup commits are ENCOURAGED - makes incremental review easier
+- "Fix linting", "Address feedback", "Fix typo" commits are fine
+- Reviewer can see what changed since last review without re-reading everything
 
-- **Avoid fixup/format commits**
-  - No "Fix linting", "Format code", "Fix typo" commits
-  - Use `git rebase -i` to squash fixups into logical units
-  - If linting fails, amend the commit - don't add a fix commit
+**Before marking PR ready (Phase 5):**
+- Rebase to squash fixups into logical feature units
+- Each commit = complete, cohesive piece of functionality
+- Related changes grouped together (feature + tests + docs)
+- Commits tell a clear story
+- Reviewers can understand each commit in isolation
 
-- **Exceptions:**
-  - PR review feedback can be separate commits if adding functionality
-  - Substantial documentation updates can be separate commits
-
-**Example:**
+**Final commit structure example:**
 ```
-✅ GOOD - Logical feature units:
-1. Implement configuration system and interactive init workflow
-2. Add documentation for configuration system and init workflow
-3. Bump version: 0.1.2 → 0.2.0
+✅ GOOD - After rebase, logical units:
+1. Add query infrastructure (registry, executor, formatters)
+2. Add find-dead-code query with tests
+3. Add remaining queries with tests
+4. Add CLI integration
+5. Update documentation
+6. Bump version: 0.7.0 → 0.7.1
 
-❌ BAD - Scattered, fixup commits:
-1. Add config system
-2. Fix linting
-3. Add tests
-4. Fix typo in docs
-5. Add more tests
-6. Format code
+✅ ALSO GOOD - During draft, incremental changes visible:
+1. Add query infrastructure
+2. Fix linting in registry
+3. Address feedback: simplify executor
+4. Add find-dead-code query
+5. Fix typo in query
+...
+[Then rebase before marking ready]
 ```
 
-### After Code Review
+### Handling Review Feedback
 
-After receiving review feedback:
-- Rebase to incorporate changes into logical commits
-- Don't add "address feedback" commits
-- Squash fixups appropriately
-- Provide concise summary of changes when feedback has been received
-- Push includes rebase after code review
+**At milestones during draft PR:**
+- Add fixup commits addressing feedback
+- Push with context: "Addressed feedback on milestone X: [what changed]"
+- Keeps incremental changes visible for next review
+
+**Before marking ready (Phase 5):**
+- Rebase to incorporate all feedback into logical commits
+- Use `git rebase -i` to squash fixups
+- Verify tests pass after rebase
+- Push cleaned history
 
 ### Commit Messages
 
@@ -312,21 +382,25 @@ just version minor    # Bump minor version
 just mapper [args]    # Run CLI tool
 ```
 
-### Starting a New Feature
-1. Discuss user journey with questions (one at a time)
-2. Write user journey document
-3. Write interface documentation (if adding public APIs)
-4. Write tests
-5. Implement application code (submodules with classes)
-6. Add CLI command
-7. Write technical docs
-8. Run `just lint` and `just test`
-9. Bump version
+### Feature Implementation Quick Reference
 
-### Before push
-- Validate changes against coding standards
-- Validate documentation is up to date and meets documentation requirements
-- Validate commit history is clean
+**Phases with checkpoints:**
+1. **Align** → User journey doc → Request review
+2. **Design** → Interface docs → Request review  
+3. **Plan** → Implementation plan in ROADMAP.md → Request review
+4. **Implement** → Code according to plan → Request review at milestones
+5. **Finalize** → Self-validate, update docs, bump version, rebase → Mark ready
+
+**Before each push:**
+- Run `just lint` to catch style issues
+- Self-validate against [contributing guides](#code-standards-reference-)
+- Include context: what milestone and why reviewing
+
+**Before marking ready:**
+- All tests passing (`just test-coverage`)
+- All docs updated (CHANGELOG, README, technical docs)
+- Clean commit history (rebase/squash fixups)
+- Version bumped
 
 ---
 
