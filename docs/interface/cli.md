@@ -285,98 +285,126 @@ Opens configuration file in `$EDITOR`. Creates file if it doesn't exist.
 
 ## Query Commands
 
+Query commands help you detect code risks and opportunities without needing to know Cypher or Neo4j.
+
 ### `mapper query list`
 
-List available predefined queries.
+List available risk detection queries.
 
 **Usage:**
 ```bash
-mapper query list
+mapper query list [OPTIONS]
 ```
+
+**Options:**
+- `--group TEXT` - Filter by query group (e.g., risk, critical-components, architecture)
+
+**Description:**
+Shows all available queries grouped by category, with one-line descriptions for each.
+
+**Examples:**
+```bash
+# List all queries
+mapper query list
+
+# List only risk detection queries
+mapper query list --group risk
+
+# List only critical component queries
+mapper query list --group critical-components
+```
+
+**Output:**
+- Query name
+- One-line description
+- Grouped by category
+
+**Related:**
+- [User Journey: Detecting Code Risks](../user-journeys/08-detecting-code-risks.md)
 
 ---
 
 ### `mapper query run`
 
-Run a query against a package.
+Run a risk detection query against an analyzed package.
 
 **Usage:**
 ```bash
-mapper query run QUERY_NAME --package PACKAGE
+mapper query run QUERY_NAME --package PACKAGE [OPTIONS]
 ```
 
 **Arguments:**
 - `QUERY_NAME` - Name of query to run (required)
 
 **Options:**
-- `--package TEXT` - Package name (required)
+- `--package TEXT` - Package name to analyze (required)
+- `--limit INTEGER` - Maximum number of results to show (default: 10)
+- `--format TEXT` - Output format: table, json, csv (default: table)
+- `--json` - Shorthand for `--format json`
+- `--csv` - Shorthand for `--format csv`
 
----
+**Description:**
+Executes a built-in query and returns actionable results with:
+- Summary statistics (total found, severity breakdown)
+- Ranked results (highest severity first)
+- Severity levels (Critical, High, Medium, Low)
+- Risk descriptions
 
-### `mapper query create`
-
-Create a custom query interactively.
-
-**Usage:**
+**Examples:**
 ```bash
-mapper query create
+# Find dead code with default settings
+mapper query run find-dead-code --package myapp
+
+# Show top 25 critical functions
+mapper query run find-critical-functions --package myapp --limit 25
+
+# Export module centrality to JSON
+mapper query run analyze-module-centrality --package myapp --json > centrality.json
+
+# Export to CSV for spreadsheet
+mapper query run find-dead-code --package myapp --csv > dead-code.csv
 ```
 
----
+**Output Formats:**
 
-### `mapper query get`
+**Table (default)**:
+- Summary stats at top
+- Formatted table with columns
+- Top N results (configurable with `--limit`)
+- Human-readable
 
-Get details about a query.
+**JSON**:
+- Complete results as JSON array
+- Includes all metadata
+- Suitable for automation/CI
+- Machine-readable
 
-**Usage:**
-```bash
-mapper query get QUERY_NAME
-```
+**CSV**:
+- Comma-separated values
+- Column headers included
+- Suitable for spreadsheets/reporting
+- Machine-readable
 
-**Arguments:**
-- `QUERY_NAME` - Name of query (required)
+**Available Queries (v0.7.0)**:
 
----
+**Risk Detection:**
+- `find-dead-code` - Find unused functions and classes
 
-### `mapper query edit`
+**Critical Components:**
+- `analyze-module-centrality` - Find most depended-on modules
+- `find-critical-functions` - Find most-called functions
 
-Edit a query.
+**Coming in v0.7.1:**
+- `analyze-call-complexity` - Find functions with deep call chains
+- `detect-circular-dependencies` - Find module import cycles
 
-**Usage:**
-```bash
-mapper query edit QUERY_NAME
-```
+**Coming in v0.7.2:**
+- `detect-module-clusters` - Find tightly coupled module groups
+- `identify-connector-modules` - Find modules that bridge different parts
 
-**Arguments:**
-- `QUERY_NAME` - Name of query (required)
-
----
-
-### `mapper query add`
-
-Add a query from a file.
-
-**Usage:**
-```bash
-mapper query add FILE
-```
-
-**Arguments:**
-- `FILE` - Path to query file (required)
-
----
-
-### `mapper query export`
-
-Export queries.
-
-**Usage:**
-```bash
-mapper query export [OPTIONS]
-```
-
-**Options:**
-- `--output FILE` - Output file path
+**Related:**
+- [User Journey: Detecting Code Risks](../user-journeys/08-detecting-code-risks.md)
+- [Query Reference](query-reference.md) - Detailed query documentation
 
 ---
 
@@ -400,4 +428,4 @@ Configuration is loaded with the following precedence (highest to lowest):
 
 ---
 
-**Last Updated**: 2026-03-24
+**Last Updated**: 2026-04-01

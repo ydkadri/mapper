@@ -5,6 +5,7 @@ This directory contains documentation for Mapper's public interfaces.
 ## Contents
 
 - [CLI Commands](cli.md) - Command-line interface reference
+- [Query Reference](query-reference.md) - Built-in risk detection queries
 - [Python API](api.md) - Public Python API reference (planned)
 
 ## Purpose
