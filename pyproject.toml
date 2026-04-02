@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mapper"
-version = "0.6.8"
+version = "0.7.0"
 description = "Mapper (Application Mapper) - AST-based Python code analyzer with Neo4j graph storage and web UI"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -65,6 +65,8 @@ ignore = [
 "__init__.py" = ["F401"]
 "tests/*" = ["S101"]  # Allow assert in tests
 "src/mapper/cli/*.py" = ["B008"]  # Typer uses function calls in defaults
+"src/mapper/query_system/group.py" = ["UP042"]  # Python 3.10 compat: use (str, Enum) not StrEnum
+"src/mapper/query_system/query.py" = ["UP042"]  # Python 3.10 compat: use (str, Enum) not StrEnum
 
 [tool.ruff.lint.isort]
 known-first-party = ["mapper"]
@@ -95,7 +97,7 @@ testpaths = ["tests"]
 asyncio_mode = "auto"
 
 [tool.bumpversion]
-current_version = "0.6.8"
+current_version = "0.7.0"
 parse = "(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)"
 serialize = ["{major}.{minor}.{patch}"]
 search = "{current_version}"
