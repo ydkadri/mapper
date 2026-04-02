@@ -32,14 +32,13 @@ These principles guide how we work together:
 
 ## Project Context
 
-- **Type**: CLI Tool + Web UI
+- **Type**: CLI Tool
 - **Purpose**: AST-based Python code analyzer with Neo4j graph storage
 - **Package Manager**: uv
 - **Task Runner**: just
-- **Testing**: pytest, pytest-asyncio, pytest-mock
+- **Testing**: pytest, pytest-mock
 - **Code Quality**: ruff, mypy, isort
 - **CLI Framework**: Typer
-- **Web Backend**: FastAPI
 - **Database**: Neo4j
 
 ---
