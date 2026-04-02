@@ -66,50 +66,16 @@ Examples of what to ask about:
 
 **Why this is critical**: Asking good questions one at a time leads to better design decisions and saves significant rework time.
 
-### Import Style (BLOCKING)
+### Validate Changes Against Style Guides (BLOCKING)
 
-**Application imports:** Use `from mapper import module` then `module.Thing`
+**All code changes must comply with the contributing style guides:**
 
-See [Python Style Guide](docs/contributing/python-style.md#import-style) for full details and rationale.
+- [Python Style Guide](docs/contributing/python-style.md) - Import style, protocols, naming, types, docstrings, error handling
+- [Code Architecture](docs/contributing/code-architecture.md) - Public vs private, module organization, function ordering
+- [Testing Standards](docs/contributing/testing.md) - Coverage, organization, parametrization
+- [Documentation Standards](docs/contributing/documentation.md) - Structure, formats, validity
 
-### Protocol Naming (BLOCKING)
-
-Protocols MUST describe behaviors, not roles. Use verb-based naming:
-
-```python
-# ✅ CORRECT
-class ParsesCode(Protocol):
-    def parse(self, source: str) -> ast.Module: ...
-
-class StoresGraph(Protocol):
-    def store(self, node: GraphNode) -> None: ...
-
-# ❌ INCORRECT
-class CodeParser(Protocol): ...
-class GraphStore(Protocol): ...
-```
-
-### Public vs Private (BLOCKING)
-
-**Explicit is better than implicit** - always clear about visibility:
-
-- **Public**: `no_underscore` - part of public API, in `__all__`
-- **Private**: `_single_underscore` - internal use
-- **Very private**: `__double_underscore` - for class properties that need protection (getters/setters, read-only)
-
-**Rule**: If something is not in `__all__`, it must be `_underscore` named or in a `_private.py` module. No implicitly private code.
-
-**`__init__.py` Pattern:**
-
-```python
-# mapper/__init__.py
-from mapper import parser
-from mapper import graph
-from mapper.parser import Parser
-from mapper.graph import Neo4jConnection
-
-__all__ = ["parser", "graph", "Parser", "Neo4jConnection"]
-```
+**Before push:** Run `just lint` to catch style violations automatically.
 
 ---
 
@@ -373,8 +339,8 @@ just mapper [args]    # Run CLI tool
 
 Review these documents to understand patterns and best practices:
 
-- **[Python Style Guide](docs/contributing/python-style.md)** - Type hints, docstrings, error handling, data structures, string formatting, data classes, context managers
-- **[Code Architecture](docs/contributing/code-architecture.md)** - Application vs CLI separation, module organization, function ordering, enums, AST analysis scope, Neo4j schema
+- **[Python Style Guide](docs/contributing/python-style.md)** - Import style, protocol naming, type hints, docstrings, error handling, data structures, string formatting, data classes, context managers
+- **[Code Architecture](docs/contributing/code-architecture.md)** - Public vs private naming, application vs CLI separation, module organization, function ordering, enums, AST analysis scope, Neo4j schema
 - **[Testing Standards](docs/contributing/testing.md)** - Coverage requirements, test organization, parametrization, code quality checks
 
 ### Before Documenting
@@ -388,7 +354,7 @@ Review these documents to understand patterns and best practices:
 - **When uncertain**: Check the relevant guide first, then ask user for validation if still ambiguous
   - Previous wording "check the guide first" was unclear about next steps after checking
   - Always prefer asking for clarification over making assumptions
-- CRITICAL rules in this file (Question-Asking Protocol, Import Style, Protocol Naming) always take precedence
+- CRITICAL rules in this file (Question-Asking Protocol, Style Guide validation) always take precedence
 
 ---
 

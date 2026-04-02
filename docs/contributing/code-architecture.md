@@ -93,6 +93,75 @@ __all__ = ["ASTExtractor", "Node", "Edge", "Graph", "models"]
 
 ---
 
+## Public vs Private Naming
+
+**Explicit is better than implicit** - Always be clear about visibility:
+
+```python
+# Public API - no underscore prefix
+def analyze_code(path: Path) -> Results:
+    """Public function for analyzing code."""
+    ...
+
+class CodeAnalyzer:
+    """Public class."""
+    pass
+
+# Private - single underscore prefix
+def _validate_path(path: Path) -> bool:
+    """Internal validation helper."""
+    ...
+
+class _CacheManager:
+    """Internal cache implementation."""
+    pass
+
+# Very private - double underscore (name mangling for class attributes)
+class Configuration:
+    def __init__(self):
+        self.__secret_key = "..."  # Name-mangled to _Configuration__secret_key
+    
+    @property
+    def secret_key(self) -> str:
+        """Read-only access to secret."""
+        return self.__secret_key
+```
+
+**Naming rules:**
+- **Public**: `no_underscore` - Part of public API, included in `__all__`
+- **Private**: `_single_underscore` - Internal use within module/package
+- **Very private**: `__double_underscore` - Class attributes needing name mangling (rare)
+
+**Critical rule**: If something is NOT in `__all__`, it MUST be:
+- Named with `_underscore` prefix, OR
+- In a `_private.py` module
+
+**No implicitly private code** - Everything should explicitly declare its visibility.
+
+```python
+# ✅ CORRECT - Explicit visibility
+# mapper/analyzer/__init__.py
+from mapper.analyzer.engine import AnalysisEngine
+from mapper.analyzer import _cache  # Private module
+
+__all__ = ["AnalysisEngine"]  # Only public API
+
+# ❌ INCORRECT - Implicit privacy
+# mapper/analyzer/__init__.py
+from mapper.analyzer.engine import AnalysisEngine
+from mapper.analyzer.cache import CacheManager  # Is this public? Unclear!
+
+__all__ = ["AnalysisEngine"]  # CacheManager implicitly private
+```
+
+**Why**:
+- Explicit visibility prevents accidental API surface growth
+- Clear `__all__` declarations document the public contract
+- Underscore prefix signals "internal use only" at import site
+- Easier to refactor internal implementations without breaking users
+
+---
+
 ## Function and Method Ordering
 
 **Define functions and methods before they are called. Read top-to-bottom.**
