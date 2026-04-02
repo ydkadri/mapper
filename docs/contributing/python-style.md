@@ -2,6 +2,38 @@
 
 This guide covers Python-specific coding standards for the Mapper project.
 
+## Import Style
+
+**Application imports MUST follow this pattern:**
+- Import the module, not individual classes/functions
+- Use `from mapper import module` then `module.Thing`
+- **DO NOT** use `from mapper.module import Thing`
+
+```python
+# ✅ CORRECT
+from mapper import parser
+from mapper import graph
+from mapper import analyzer
+
+ast_tree = parser.parse_file(path)
+connection = graph.Neo4jConnection(uri, auth)
+results = analyzer.extract_relationships(ast_tree)
+
+# ❌ INCORRECT
+from mapper.parser import parse_file
+from mapper.graph import Neo4jConnection
+from mapper.analyzer import extract_relationships
+```
+
+**Third-party imports:**
+- Keep standard library and third-party imports as idiomatic
+- `from typing import Protocol` is fine
+- `import typer` or `from typer import Typer` is fine
+
+**Why**: This pattern provides clear module context at usage sites, making code more readable and easier to navigate.
+
+---
+
 ## Type Hints
 
 **Type everything** - Use type hints on all functions, including private ones:
