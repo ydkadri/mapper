@@ -1,66 +1,169 @@
 """Query management commands for Mapper CLI."""
 
+import sys
+
 import typer
 from rich.console import Console
 
+from mapper import config_manager, graph
+from mapper.query_system import executor, formatters, registry
+
 console = Console()
 
-app = typer.Typer(help="Manage custom Neo4j queries")
+app = typer.Typer(help="Run risk detection queries")
+
+
+@app.command(name="groups")
+def list_groups() -> None:
+    """List all query groups.
+
+    Shows available query groups with their CLI identifiers and display names.
+    """
+    reg = registry.get_registry()
+    queries = reg.list_all()
+
+    # Build unique groups with counts
+    from mapper.query_system.group import QueryGroup
+
+    groups_info: dict[QueryGroup, int] = {}  # group -> count
+    for q in queries:
+        if q.group not in groups_info:
+            groups_info[q.group] = 0
+        groups_info[q.group] += 1
+
+    console.print(f"\n[bold]Query Groups[/bold] ({len(groups_info)} total)\n")
+    console.print(f"{'CLI Name':<20} {'Display Name':<30} {'Queries'}")
+    console.print(f"{'-' * 20} {'-' * 30} {'-' * 10}")
+
+    for group in sorted(groups_info.keys(), key=lambda g: g.value):
+        count = groups_info[group]
+        console.print(f"[cyan]{group.value:<20}[/cyan] {group.display_name:<30} {count} queries")
+
+    console.print()
+    console.print("[dim]Use 'mapper query list --group <cli-name>' to filter queries[/dim]")
+    console.print()
 
 
 @app.command(name="list")
-def list_queries() -> None:
-    """List all available queries (built-in and custom)."""
-    console.print("[yellow]Listing queries...[/yellow]")
-    console.print("[red]Not implemented yet[/red]")
+def list_queries(
+    group: str | None = typer.Option(None, help="Filter by query group (CLI name)"),
+) -> None:
+    """List all available risk detection queries.
 
-
-@app.command()
-def get(name: str) -> None:
-    """Get details of a specific query.
-
-    Shows the query definition, description, and parameters.
+    Shows queries grouped by category with one-line descriptions.
     """
-    console.print(f"[yellow]Getting query:[/yellow] {name}")
-    console.print("[red]Not implemented yet[/red]")
+    reg = registry.get_registry()
 
+    if group:
+        queries = reg.list_by_group(group)
+        if not queries:
+            console.print(f"[red]No queries found in group '{group}'[/red]")
+            available_groups = reg.get_groups()
+            console.print(f"\nAvailable groups: {', '.join(sorted(available_groups))}")
+            console.print("[dim]Use 'mapper query groups' to see all groups[/dim]")
+            raise typer.Exit(code=1)
 
-@app.command()
-def edit(name: str) -> None:
-    """Edit an existing query in $EDITOR."""
-    console.print(f"[yellow]Editing query:[/yellow] {name}")
-    console.print("[red]Not implemented yet[/red]")
+        # Get display name from first query's group
+        group_display_name = queries[0].group.display_name
+        console.print(f"\n[bold]{group_display_name} Queries[/bold]\n")
+        for q in queries:
+            console.print(f"  [cyan]{q.name:30}[/cyan] {q.description}")
+        console.print()
+    else:
+        # List all queries grouped by category
+        queries = reg.list_all()
+        total = len(queries)
+
+        console.print(f"\n[bold]Available queries[/bold] ({total} total)\n")
+
+        current_group = None
+        for q in queries:
+            if q.group != current_group:
+                current_group = q.group
+                console.print(f"[bold]{q.group.display_name}[/bold]")
+            console.print(f"  [cyan]{q.name:30}[/cyan] {q.description}")
+
+        console.print()
+        console.print("[dim]Use 'mapper query groups' to see all groups[/dim]")
+        console.print("[dim]Use 'mapper query list --group <cli-name>' to filter by group[/dim]")
+        console.print("[dim]Use 'mapper query run <name> --package <pkg>' to execute[/dim]")
+        console.print()
 
 
 @app.command()
 def run(
     query_name: str,
-    package: str = typer.Option(..., help="Package name to run query against"),
+    package: str = typer.Option(..., help="Package name to analyze"),
+    limit: int = typer.Option(10, help="Maximum number of results to show (table format only)"),
+    format_type: str = typer.Option("table", "--format", help="Output format: table, json, csv"),
+    json_flag: bool = typer.Option(
+        False, "--json", help="Output as JSON (shorthand for --format json)"
+    ),
+    csv_flag: bool = typer.Option(
+        False, "--csv", help="Output as CSV (shorthand for --format csv)"
+    ),
 ) -> None:
-    """Run a saved query against a package."""
-    console.print(f"[yellow]Running query:[/yellow] {query_name}")
-    console.print(f"[dim]Package:[/dim] {package}")
-    console.print("[red]Not implemented yet[/red]")
+    """Run a risk detection query against an analyzed package.
 
+    Returns actionable results with severity levels and summary statistics.
+    """
+    # Resolve format (flags override --format option)
+    if json_flag:
+        format_type = "json"
+    elif csv_flag:
+        format_type = "csv"
 
-@app.command()
-def create(query_name: str) -> None:
-    """Create a new custom query (opens editor)."""
-    console.print(f"[yellow]Creating query:[/yellow] {query_name}")
-    console.print("[red]Not implemented yet[/red]")
+    # Validate format
+    if format_type not in ["table", "json", "csv"]:
+        console.print(f"[red]Invalid format: {format_type}[/red]")
+        console.print("Must be one of: table, json, csv")
+        raise typer.Exit(code=1)
 
+    try:
+        # Get Neo4j credentials and config
+        user, password = config_manager.get_neo4j_credentials()
+        config = config_manager.load_config()
 
-@app.command()
-def add(file_path: str) -> None:
-    """Import queries from a YAML file."""
-    console.print(f"[yellow]Importing queries from:[/yellow] {file_path}")
-    console.print("[red]Not implemented yet[/red]")
+        # Create connection
+        connection = graph.Neo4jConnection(
+            uri=config.neo4j.uri,
+            user=user,
+            password=password,
+            database=config.neo4j.database,
+        )
 
+        # Test connection
+        success, message = connection.test_connection()
+        if not success:
+            console.print(f"[red]Neo4j connection failed:[/red] {message}")
+            console.print("\nEnsure Neo4j is running and credentials are correct.")
+            console.print("Run 'mapper status' to check configuration.")
+            raise typer.Exit(code=1)
 
-@app.command(name="export")
-def export_queries(
-    output: str | None = typer.Option(None, help="Output file path (default: stdout)"),
-) -> None:
-    """Export custom queries to YAML."""
-    console.print("[yellow]Exporting queries...[/yellow]")
-    console.print("[red]Not implemented yet[/red]")
+        # Execute query
+        exec = executor.QueryExecutor(connection)
+        result = exec.execute(query_name, package)
+
+        # Format and output
+        formatter = formatters.get_formatter(format_type)
+        output = formatter.format(result, limit=limit if format_type == "table" else None)
+
+        # Print output
+        if format_type == "table":
+            # Rich table with colors - use console.print
+            console.print(output, end="")
+        else:
+            # Plain text - write to stdout
+            sys.stdout.write(output)
+            if format_type == "json":
+                sys.stdout.write("\n")
+
+        # Cleanup
+        connection.close()
+
+    except ValueError as e:
+        console.print(f"[red]Error:[/red] {e}")
+        raise typer.Exit(code=1) from None
+    except Exception as e:
+        console.print(f"[red]Unexpected error:[/red] {e}")
+        raise typer.Exit(code=1) from e
