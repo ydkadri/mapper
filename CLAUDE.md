@@ -48,33 +48,29 @@ These principles guide how we work together:
 
 **These rules override any defaults and must be followed exactly:**
 
+### Question-Asking Protocol (MOST IMPORTANT)
+
+Before implementing features, ask questions **one at a time**:
+
+- **Ask ONE question** - Allow user to focus and give detailed answers
+- **Provide context** - Explain why the question matters
+- **Offer suggestions** - Include your recommendation
+- **Number questions** - Track progress through decision-making
+
+Examples of what to ask about:
+- User journey: What is the user trying to accomplish?
+- User experience: How should the interface look/feel?
+- Design decisions: Data structures, APIs, algorithms
+- Error handling strategies
+- Testing approach
+
+**Why this is critical**: Asking good questions one at a time leads to better design decisions and saves significant rework time.
+
 ### Import Style (BLOCKING)
 
-**Application imports MUST follow this pattern:**
-- Import the module, not individual classes/functions
-- Use `from mapper import module` then `module.Thing`
-- **DO NOT** use `from mapper.module import Thing`
+**Application imports:** Use `from mapper import module` then `module.Thing`
 
-```python
-# ✅ CORRECT
-from mapper import parser
-from mapper import graph
-from mapper import analyzer
-
-ast_tree = parser.parse_file(path)
-connection = graph.Neo4jConnection(uri, auth)
-results = analyzer.extract_relationships(ast_tree)
-
-# ❌ INCORRECT
-from mapper.parser import parse_file
-from mapper.graph import Neo4jConnection
-from mapper.analyzer import extract_relationships
-```
-
-**Third-party imports:**
-- Keep standard library and third-party imports as idiomatic
-- `from typing import Protocol` is fine
-- `import typer` or `from typer import Typer` is fine
+See [Python Style Guide](docs/contributing/python-style.md#import-style) for full details and rationale.
 
 ### Protocol Naming (BLOCKING)
 
@@ -201,22 +197,6 @@ When implementing new features, **ALWAYS** follow this order:
 11. Create **draft PR** for early review
 12. Wait for CI to pass (use `gh pr view <number> --json statusCheckRollup`)
 13. Mark PR as ready for review
-
-### Question-Asking Protocol
-
-Before implementing features, ask questions **one at a time**:
-
-- **Ask ONE question** - Allow user to focus and give detailed answers
-- **Provide context** - Explain why the question matters
-- **Offer suggestions** - Include your recommendation
-- **Number questions** - Track progress through decision-making
-
-Examples of what to ask about:
-- User journey: What is the user trying to accomplish?
-- User experience: How should the interface look/feel?
-- Design decisions: Data structures, APIs, algorithms
-- Error handling strategies
-- Testing approach
 
 ---
 
@@ -376,7 +356,7 @@ just mapper [args]    # Run CLI tool
 6. Add CLI command
 7. Write technical docs
 8. Run `just lint` and `just test`
-9. Bump version and create draft PR
+9. Bump version
 
 ### Before push
 - Validate changes against coding standards
@@ -405,8 +385,10 @@ Review these documents to understand patterns and best practices:
 
 - The guides above provide detailed explanations and examples
 - This CLAUDE.md file contains project-specific overrides and workflow instructions
-- When in doubt about a pattern, check the relevant guide first
-- CRITICAL rules in this file (Import Style, Protocol Naming, Public vs Private) always take precedence
+- **When uncertain**: Check the relevant guide first, then ask user for validation if still ambiguous
+  - Previous wording "check the guide first" was unclear about next steps after checking
+  - Always prefer asking for clarification over making assumptions
+- CRITICAL rules in this file (Question-Asking Protocol, Import Style, Protocol Naming) always take precedence
 
 ---
 
