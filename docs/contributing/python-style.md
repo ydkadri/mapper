@@ -34,6 +34,35 @@ from mapper.analyzer import extract_relationships
 
 ---
 
+## Protocol Naming
+
+**Protocols MUST describe behaviors, not roles.** Use verb-based naming:
+
+```python
+# ✅ CORRECT - Describes what it does
+class ParsesCode(Protocol):
+    def parse(self, source: str) -> ast.Module: ...
+
+class StoresGraph(Protocol):
+    def store(self, node: GraphNode) -> None: ...
+
+class ValidatesData(Protocol):
+    def validate(self, data: dict) -> bool: ...
+
+# ❌ INCORRECT - Describes what it is
+class CodeParser(Protocol): ...
+class GraphStore(Protocol): ...
+class DataValidator(Protocol): ...
+```
+
+**Why**: 
+- Protocols define interfaces, not implementations
+- Verb-based names make it clear they're contracts for behavior
+- Distinguishes protocols from concrete classes at a glance
+- Follows Python's duck typing philosophy ("if it quacks like a duck...")
+
+---
+
 ## Type Hints
 
 **Type everything** - Use type hints on all functions, including private ones:
