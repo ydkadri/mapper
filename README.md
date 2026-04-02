@@ -5,7 +5,7 @@
 ![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/ydkadri/9501806ed5eac873dd324bc606c6dd79/raw/mapper-coverage.json&cacheSeconds=300)
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)
 
-AST-based Python code analyser that maps application structure and relationships into a Neo4j graph database, with CLI and web UI for exploration.
+AST-based Python code analyser that maps application structure and relationships into a Neo4j graph database, with a powerful CLI for exploration and analysis.
 
 ## Overview
 
@@ -17,7 +17,7 @@ Mapper helps you understand complex Python applications by analysing their Abstr
 - **Neo4j Graph Storage**: Store and query code relationships in a graph database
 - **Incremental Updates**: Track versions and update only what changed
 - **CLI Tool**: Powerful command-line interface built with Typer
-- **Web UI**: Interactive visualization and exploration (FastAPI + React)
+- **Risk Detection Queries**: Built-in queries to find dead code, module centrality, and critical functions
 - **Package-Wide Analysis**: Analyse entire Python packages from a directory
 
 ### Use Cases
@@ -30,12 +30,11 @@ Mapper helps you understand complex Python applications by analysing their Abstr
 ### Architecture
 
 - **CLI**: Typer + Rich for beautiful terminal output
-- **Backend**: FastAPI for web UI API
 - **Database**: Neo4j for graph storage
 - **Parser**: Python `ast` module for code analysis
 - **Package Manager**: uv
 - **Task Runner**: just
-- **Testing**: pytest + pytest-asyncio + pytest-mock
+- **Testing**: pytest + pytest-mock
 - **Code Quality**: ruff, isort, mypy
 
 ## Quick Start
@@ -57,14 +56,12 @@ cd mapper
 # Install dependencies
 just install
 
-# Start the development environment (Neo4j + API + Web UI)
+# Start Neo4j database
 just up
 ```
 
-The services will be available at:
+Neo4j will be available at:
 - **Neo4j Browser**: http://localhost:7474 (username: neo4j, password: devpassword)
-- **Backend API**: http://localhost:8080/api/
-- **Web UI**: http://localhost:3000
 
 ### Basic Usage
 
@@ -75,11 +72,13 @@ mapper init
 # Start analyzing a Python package
 mapper analyse start /path/to/package
 
-# View analysis results in Neo4j Browser
-# Navigate to http://localhost:7474
+# Run risk detection queries
+mapper query list                              # List available queries
+mapper query run find-dead-code mypackage      # Find unused code
+mapper query run analyze-module-centrality mypackage  # Find central modules
 
-# Start the web UI for interactive exploration
-# Navigate to http://localhost:3000
+# View detailed analysis in Neo4j Browser
+# Navigate to http://localhost:7474 and run Cypher queries
 ```
 
 ## Development
@@ -90,7 +89,7 @@ mapper analyse start /path/to/package
 # Development
 just install          # Install dependencies
 just build           # Build Docker containers
-just up              # Start containers (Neo4j + API + Web UI)
+just up              # Start Neo4j container
 just down            # Stop containers
 just reset           # Full reset (stops, removes volumes, rebuilds)
 
@@ -147,10 +146,11 @@ mapper/
 ├── src/
 │   └── mapper/             # Main package
 │       ├── cli/            # CLI commands
-│       ├── parser.py       # AST parsing
-│       ├── graph.py        # Neo4j operations
-│       ├── analyser/       # Analysis packages
-│       ├── api.py          # FastAPI backend
+│       ├── ast_parser/     # AST parsing
+│       ├── graph_loader/   # Neo4j operations
+│       ├── analyser/       # Code analysis
+│       ├── query_system/   # Risk detection queries
+│       ├── name_resolver/  # Name resolution
 │       └── config_manager/ # Configuration management
 ├── tests/                  # Test suite
 ├── docs/                   # Documentation
