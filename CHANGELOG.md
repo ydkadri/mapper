@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.4] - 2026-04-04
+
+### Fixed
+- **Exception handling** - Replaced 10 bare `except Exception` handlers with specific exception types
+  - analyser/main.py: OSError, UnicodeDecodeError, RuntimeError for file operations
+  - cli/queries.py: FileNotFoundError, OSError, DriverError for query execution
+  - graph.py: AuthError, DatabaseError, DriverError for Neo4j connection testing
+  - status_checker/checker.py (3 instances): Specific config/connection errors
+  - setup_orchestrator/orchestrator.py (4 instances): DriverError, OSError, PermissionError
+  - Follows Python style guide: catch specific exceptions, not bare Exception
+  - Documents what can actually go wrong, prevents hiding bugs, improves debugging
+
+### Changed
+- **Protocol naming** - Renamed `Formatter` protocol to `FormatsQueryResults`
+  - Follows verb-based naming convention per code-architecture.md
+  - Protocols describe capabilities: FormatsQueryResults, ParsesCode, etc.
+  - Implementation classes (TableFormatter, JSONFormatter, CSVFormatter) unchanged
+
 ## [0.7.3] - 2026-04-02
 
 ### Fixed
