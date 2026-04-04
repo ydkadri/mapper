@@ -18,6 +18,61 @@ This document defines the interface for structured parameter and decorator stora
 
 ## Data Models
 
+### ParameterKind
+
+**Purpose**: Enum representing different parameter types in Python function signatures.
+
+**Definition**:
+```python
+from enum import Enum
+
+class ParameterKind(str, Enum):
+    """Parameter kind classification.
+    
+    This enum matches Python's inspect.Parameter.kind values, using the same
+    names and semantics. See Python's inspect module documentation for details:
+    https://docs.python.org/3/library/inspect.html#inspect.Parameter.kind
+    
+    Values:
+        POSITIONAL_ONLY: Parameters before / in signature (e.g., def f(a, b, /))
+        POSITIONAL_OR_KEYWORD: Normal parameters that can be passed by position or keyword
+        VAR_POSITIONAL: *args - captures arbitrary positional arguments
+        KEYWORD_ONLY: Parameters after * or *args that must be passed by keyword
+        VAR_KEYWORD: **kwargs - captures arbitrary keyword arguments
+    """
+    
+    POSITIONAL_ONLY = "POSITIONAL_ONLY"
+    POSITIONAL_OR_KEYWORD = "POSITIONAL_OR_KEYWORD"
+    VAR_POSITIONAL = "VAR_POSITIONAL"
+    KEYWORD_ONLY = "KEYWORD_ONLY"
+    VAR_KEYWORD = "VAR_KEYWORD"
+```
+
+**Usage Examples**:
+```python
+# Normal parameters - POSITIONAL_OR_KEYWORD
+def create_user(user_id, name, email):
+    pass
+
+# Positional-only (before /) - POSITIONAL_ONLY
+def pow(x, y, /, mod=None):
+    pass
+
+# With *args - VAR_POSITIONAL
+def print(*values, sep=' '):
+    pass
+
+# Keyword-only (after *) - KEYWORD_ONLY
+def create_user(user_id, *, admin=False, verified=False):
+    pass
+
+# With **kwargs - VAR_KEYWORD
+def configure(**options):
+    pass
+```
+
+---
+
 ### ParameterInfo
 
 **Purpose**: Represents a single function/method parameter with full metadata.
@@ -31,11 +86,12 @@ class ParameterInfo:
     """Information about a function parameter.
     
     Attributes:
-        name: Parameter name (e.g., "user_id")
+        name: Parameter name (e.g., "user_id", "args", "kwargs")
         type_hint: Type annotation string (e.g., "int", "str | None"), None if no annotation
         has_type_hint: Whether parameter has a type annotation
         default: String representation of default value, None if no default
         position: Zero-indexed position in parameter list
+        kind: Parameter kind (matches Python's inspect.Parameter.kind)
     """
     
     name: str
@@ -43,22 +99,27 @@ class ParameterInfo:
     has_type_hint: bool
     default: str | None
     position: int
+    kind: ParameterKind
 ```
 
 **Validation**:
 - `name` must not be empty
 - `position` must be >= 0
 - `has_type_hint` must match `type_hint is not None`
+- `default` must be None when `kind` is VAR_POSITIONAL or VAR_KEYWORD (*args/**kwargs cannot have defaults)
+- For `kind` == VAR_POSITIONAL: `name` typically "args" (without * prefix)
+- For `kind` == VAR_KEYWORD: `name` typically "kwargs" (without ** prefix)
 
 **Example Instances**:
 ```python
-# Typed parameter with no default
+# Normal typed parameter with no default
 ParameterInfo(
     name="user_id",
     type_hint="int",
     has_type_hint=True,
     default=None,
-    position=0
+    position=0,
+    kind=ParameterKind.POSITIONAL_OR_KEYWORD
 )
 
 # Untyped parameter with default
@@ -67,16 +128,38 @@ ParameterInfo(
     type_hint=None,
     has_type_hint=False,
     default="'Unknown'",
-    position=1
+    position=1,
+    kind=ParameterKind.POSITIONAL_OR_KEYWORD
 )
 
-# Typed parameter with default
+# *args parameter
 ParameterInfo(
-    name="email",
-    type_hint="str | None",
+    name="args",
+    type_hint=None,
+    has_type_hint=False,
+    default=None,
+    position=2,
+    kind=ParameterKind.VAR_POSITIONAL
+)
+
+# Keyword-only parameter
+ParameterInfo(
+    name="admin",
+    type_hint="bool",
     has_type_hint=True,
-    default="None",
-    position=2
+    default="False",
+    position=3,
+    kind=ParameterKind.KEYWORD_ONLY
+)
+
+# **kwargs parameter
+ParameterInfo(
+    name="kwargs",
+    type_hint=None,
+    has_type_hint=False,
+    default=None,
+    position=4,
+    kind=ParameterKind.VAR_KEYWORD
 )
 ```
 
@@ -160,21 +243,24 @@ func_info = FunctionInfo(
             type_hint="int",
             has_type_hint=True,
             default=None,
-            position=0
+            position=0,
+            kind=ParameterKind.POSITIONAL_OR_KEYWORD
         ),
         ParameterInfo(
             name="name",
             type_hint=None,
             has_type_hint=False,
             default=None,
-            position=1
+            position=1,
+            kind=ParameterKind.POSITIONAL_OR_KEYWORD
         ),
         ParameterInfo(
             name="email",
             type_hint="str",
             has_type_hint=True,
             default="None",
-            position=2
+            position=2,
+            kind=ParameterKind.POSITIONAL_OR_KEYWORD
         )
     ],
     decorators=[
@@ -214,21 +300,24 @@ func_info = FunctionInfo(
             type_hint: "int",
             has_type_hint: true,
             default: null,
-            position: 0
+            position: 0,
+            kind: "POSITIONAL_OR_KEYWORD"
         },
         {
             name: "name",
             type_hint: null,
             has_type_hint: false,
             default: null,
-            position: 1
+            position: 1,
+            kind: "POSITIONAL_OR_KEYWORD"
         },
         {
             name: "email",
             type_hint: "str",
             has_type_hint: true,
             default: "None",
-            position: 2
+            position: 2,
+            kind: "POSITIONAL_OR_KEYWORD"
         }
     ]
 })
@@ -236,15 +325,31 @@ func_info = FunctionInfo(
 
 **Query Examples**:
 ```cypher
-// Find functions with untyped parameters
+// Find functions with untyped parameters (excluding *args/**kwargs)
 MATCH (f:Function)
-WHERE any(p IN f.parameters WHERE NOT p.has_type_hint)
+WHERE any(p IN f.parameters 
+    WHERE NOT p.has_type_hint 
+    AND p.kind <> "VAR_POSITIONAL" 
+    AND p.kind <> "VAR_KEYWORD")
 RETURN f.fqn, [p IN f.parameters WHERE NOT p.has_type_hint | p.name]
 
-// Find functions with >7 parameters
+// Find functions with >7 named parameters (excluding *args/**kwargs)
 MATCH (f:Function)
-WHERE size(f.parameters) > 7
+WHERE size([p IN f.parameters 
+    WHERE p.kind IN ["POSITIONAL_OR_KEYWORD", "POSITIONAL_ONLY", "KEYWORD_ONLY"]]) > 7
 RETURN f.fqn, size(f.parameters) as param_count
+
+// Find functions with *args or **kwargs
+MATCH (f:Function)
+WHERE any(p IN f.parameters WHERE p.kind IN ["VAR_POSITIONAL", "VAR_KEYWORD"])
+RETURN f.fqn, 
+       [p IN f.parameters WHERE p.kind = "VAR_POSITIONAL" | p.name] as args_params,
+       [p IN f.parameters WHERE p.kind = "VAR_KEYWORD" | p.name] as kwargs_params
+
+// Find functions with keyword-only parameters
+MATCH (f:Function)
+WHERE any(p IN f.parameters WHERE p.kind = "KEYWORD_ONLY")
+RETURN f.fqn, [p IN f.parameters WHERE p.kind = "KEYWORD_ONLY" | p.name]
 
 // Find parameters with defaults
 MATCH (f:Function)
@@ -502,9 +607,9 @@ func_info = FunctionInfo(
     name="create_user",
     fqn="myapp.users.create_user",
     parameters=[
-        ParameterInfo(name="user_id", type_hint="int", has_type_hint=True, default=None, position=0),
-        ParameterInfo(name="name", type_hint=None, has_type_hint=False, default=None, position=1),
-        ParameterInfo(name="email", type_hint="str", has_type_hint=True, default='"unknown@example.com"', position=2),
+        ParameterInfo(name="user_id", type_hint="int", has_type_hint=True, default=None, position=0, kind=ParameterKind.POSITIONAL_OR_KEYWORD),
+        ParameterInfo(name="name", type_hint=None, has_type_hint=False, default=None, position=1, kind=ParameterKind.POSITIONAL_OR_KEYWORD),
+        ParameterInfo(name="email", type_hint="str", has_type_hint=True, default='"unknown@example.com"', position=2, kind=ParameterKind.POSITIONAL_OR_KEYWORD),
     ],
     decorators=[
         DecoratorInfo(name="require_auth", args=None, full_text="@require_auth"),
@@ -522,9 +627,9 @@ CREATE (f:Function {
     name: "create_user",
     fqn: "myapp.users.create_user",
     parameters: [
-        {name: "user_id", type_hint: "int", has_type_hint: true, default: null, position: 0},
-        {name: "name", type_hint: null, has_type_hint: false, default: null, position: 1},
-        {name: "email", type_hint: "str", has_type_hint: true, default: '"unknown@example.com"', position: 2}
+        {name: "user_id", type_hint: "int", has_type_hint: true, default: null, position: 0, kind: "POSITIONAL_OR_KEYWORD"},
+        {name: "name", type_hint: null, has_type_hint: false, default: null, position: 1, kind: "POSITIONAL_OR_KEYWORD"},
+        {name: "email", type_hint: "str", has_type_hint: true, default: '"unknown@example.com"', position: 2, kind: "POSITIONAL_OR_KEYWORD"}
     ]
 })
 
@@ -558,14 +663,16 @@ RETURN f.fqn, d.args
 
 **Key Changes**:
 1. New attrs models: `ParameterInfo`, `DecoratorInfo`
-2. FunctionInfo/ClassInfo fields change from string to structured lists
-3. Parameters stored as array of maps on Function/Method nodes
-4. Decorators stored as separate nodes with DECORATED_WITH relationships
-5. Breaking change: requires re-analysis of existing projects
+2. New enum: `ParameterKind` (matches Python's `inspect.Parameter.kind`)
+3. FunctionInfo/ClassInfo fields change from string to structured lists
+4. Parameters stored as array of maps on Function/Method nodes
+5. Decorators stored as separate nodes with DECORATED_WITH relationships
+6. Breaking change: requires re-analysis of existing projects
 
 **Benefits**:
-- Type-safe data structures
+- Type-safe data structures with validation
 - Precise queries without string parsing
 - Enables code quality enforcement
+- Handles all parameter types (*args, **kwargs, keyword-only, etc.)
 
 **Migration**: Re-analyze projects with `mapper analyse start --force`
