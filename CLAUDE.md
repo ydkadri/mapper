@@ -412,5 +412,5 @@ Review these documents to understand patterns and best practices:
 
 ---
 
-**Last Updated**: 2026-04-02  
-**Current Version**: 0.7.2
+**Last Updated**: 2026-04-04  
+**Current Version**: 0.7.6
