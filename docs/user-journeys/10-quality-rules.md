@@ -49,11 +49,17 @@ exclude_patterns = ["test_*", "__init__"]
 enabled = true
 min_coverage = 90
 exclude_patterns = ["__str__", "__repr__"]
+
+[quality.param_complexity]
+enabled = true
+max_parameters = 5
+exclude_patterns = ["__init__"]
 ```
 
 **Default behavior (if no config):**
 - Type coverage: 80% threshold, return types optional
 - Docstring coverage: 90% threshold
+- Parameter complexity: 5 parameters maximum
 
 ---
 
@@ -100,6 +106,25 @@ $ mapper quality docstring-coverage
 Exit code: 1
 ```
 
+Check parameter complexity:
+
+```bash
+$ mapper quality param-complexity
+
+✗ Parameter Complexity: 3 violations (threshold: 5 max)
+  
+  By File:
+  src/mapper/analyser/main.py         2 violations
+  src/mapper/graph_loader/loader.py   1 violation
+  
+  Functions exceeding threshold:
+  - src/mapper/analyser/main.py:42 (process_extraction) - 7 parameters
+  - src/mapper/analyser/main.py:95 (validate_and_load) - 6 parameters
+  - src/mapper/graph_loader/loader.py:156 (_create_single_import_node) - 6 parameters
+
+Exit code: 1
+```
+
 ---
 
 ### Step 3: Run All Enabled Checks
@@ -113,8 +138,9 @@ Running quality checks...
 
 ✓ Type Coverage: 85% (threshold: 80%)
 ✗ Docstring Coverage: 75% (threshold: 90%)
+✗ Parameter Complexity: 3 violations (max: 5 parameters)
 
-1 of 2 checks failed
+2 of 3 checks failed
 
 Exit code: 1
 ```
@@ -167,6 +193,27 @@ $ mapper quality check --json
         "violations": ["process_file", "validate_path", "extract_metadata", "helper_fn", "setup"]
       }
     ]
+  },
+  {
+    "rule": "param_complexity",
+    "status": "fail",
+    "threshold": 5,
+    "total_violations": 3,
+    "by_file": [
+      {
+        "path": "src/mapper/analyser/main.py",
+        "violations": [
+          {"function": "process_extraction", "line": 42, "param_count": 7},
+          {"function": "validate_and_load", "line": 95, "param_count": 6}
+        ]
+      },
+      {
+        "path": "src/mapper/graph_loader/loader.py",
+        "violations": [
+          {"function": "_create_single_import_node", "line": 156, "param_count": 6}
+        ]
+      }
+    ]
   }
 ]
 ```
@@ -182,6 +229,9 @@ type_coverage,src/mapper/query_system/queries.py,8,7,87.5,pass
 docstring_coverage,src/mapper/analyser/main.py,15,10,66.7,fail
 docstring_coverage,src/mapper/graph_loader/loader.py,10,8,80.0,fail
 docstring_coverage,src/mapper/query_system/queries.py,8,7,87.5,pass
+param_complexity,src/mapper/analyser/main.py,15,13,86.7,fail
+param_complexity,src/mapper/graph_loader/loader.py,10,9,90.0,fail
+param_complexity,src/mapper/query_system/queries.py,8,8,100.0,pass
 ```
 
 ---
@@ -307,6 +357,7 @@ After running quality checks:
 If no `mapper.toml` exists, default thresholds are used:
 - Type coverage: 80%
 - Docstring coverage: 90%
+- Parameter complexity: 5 parameters maximum
 
 Create `mapper.toml` in project root to customize.
 
