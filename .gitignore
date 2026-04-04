@@ -76,3 +76,6 @@ Thumbs.db
 uv.lock
 ROADMAP.md
 .claude/
+
+# Local planning documents (not for public repo)
+docs/plans/
