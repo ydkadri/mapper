@@ -177,9 +177,7 @@ class TestFunctionInfo:
             is_public=True,
             decorators=[
                 models.DecoratorInfo(name="property", args=None, full_text="@property"),
-                models.DecoratorInfo(
-                    name="rate_limit", args="(10)", full_text="@rate_limit(10)"
-                ),
+                models.DecoratorInfo(name="rate_limit", args="(10)", full_text="@rate_limit(10)"),
             ],
         )
         assert len(func.decorators) == 2

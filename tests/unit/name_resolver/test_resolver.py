@@ -202,9 +202,7 @@ class TestNameResolverWithExtractionResult:
         func = models.FunctionInfo(
             name="MyClass",
             is_public=True,
-            decorators=[
-                models.DecoratorInfo(name="dataclass", args=None, full_text="@dataclass")
-            ],
+            decorators=[models.DecoratorInfo(name="dataclass", args=None, full_text="@dataclass")],
         )
 
         result = models.ExtractionResult(

@@ -406,9 +406,7 @@ class TestGraphLoader:
             name="decorated_function",
             is_public=True,
             decorators=[
-                ast_parser.models.DecoratorInfo(
-                    name="property", args=None, full_text="@property"
-                ),
+                ast_parser.models.DecoratorInfo(name="property", args=None, full_text="@property"),
                 ast_parser.models.DecoratorInfo(
                     name="rate_limit", args="10", full_text="@rate_limit(10)"
                 ),
@@ -460,9 +458,7 @@ class TestGraphLoader:
             name="MyClass",
             is_public=True,
             decorators=[
-                ast_parser.models.DecoratorInfo(
-                    name="dataclass", args=None, full_text="@dataclass"
-                )
+                ast_parser.models.DecoratorInfo(name="dataclass", args=None, full_text="@dataclass")
             ],
         )
         extraction = ast_parser.models.ExtractionResult(module=module_info, classes=[class_info])
