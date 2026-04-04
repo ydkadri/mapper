@@ -6,6 +6,7 @@ This directory contains documentation for Mapper's public interfaces.
 
 - [CLI Commands](cli.md) - Command-line interface reference
 - [Query Reference](query-reference.md) - Built-in risk detection queries
+- [Structured Properties](structured-properties.md) - Parameter and decorator storage models (v0.8.0+)
 - [Python API](api.md) - Public Python API reference (planned)
 
 ## Purpose
