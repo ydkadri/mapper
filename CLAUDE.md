@@ -122,6 +122,8 @@ Work happens in phases with explicit checkpoints for early alignment.
    
    **PR Strategy**: Single PR | Multiple smaller PRs
    
+   **GitHub Issues**: #XX, #YY (list all issues this work will resolve)
+   
    **Commit Structure**:
    1. [Self-contained unit 1] - what and why
    2. [Self-contained unit 2] - what and why
@@ -137,6 +139,8 @@ Work happens in phases with explicit checkpoints for early alignment.
    - Design patterns used
    - Integration points
    ```
+   
+   **IMPORTANT**: Check ROADMAP.md for any existing GitHub issues related to this feature. List them in the plan so they can be referenced in the PR and closed on merge.
 
 **CHECKPOINT 3**: Push plan to ROADMAP.md
 - **Request review**: "Implementation plan complete - agreeing on commit structure and milestones"
@@ -195,7 +199,12 @@ Work happens in phases with explicit checkpoints for early alignment.
    - Ensure each commit is self-contained and logical
    - Verify all tests pass after rebase
 
-10. **Mark PR ready for final review**
+10. **Verify GitHub issue references**:
+    - Check ROADMAP.md implementation plan for listed GitHub issues
+    - Add issue references to PR description (e.g., "Closes #33, Resolves #42")
+    - Verify issue numbers are correct and still open
+
+11. **Mark PR ready for final review**
     - **Request review**: "Ready for final review - all feedback addressed, tests passing, docs updated"
     - Wait for CI to pass (use `gh pr view <number> --json statusCheckRollup`)
 
@@ -368,9 +377,9 @@ just mapper [args]    # Run CLI tool
 **Phases with checkpoints:**
 1. **Align** → User journey doc → Request review
 2. **Design** → Interface docs → Request review  
-3. **Plan** → Implementation plan in ROADMAP.md → Request review
+3. **Plan** → Implementation plan in ROADMAP.md (list GitHub issues) → Request review
 4. **Implement** → Code according to plan → Request review at milestones
-5. **Finalize** → Self-validate, update docs, bump version, rebase → Mark ready
+5. **Finalize** → Self-validate, update docs, bump version, rebase, verify issue refs → Mark ready
 
 **Before each push:**
 - Run `just lint` to catch style issues
@@ -382,6 +391,7 @@ just mapper [args]    # Run CLI tool
 - All docs updated (CHANGELOG, README, technical docs)
 - Clean commit history (rebase/squash fixups)
 - Version bumped
+- GitHub issues verified and referenced in PR (check ROADMAP.md plan)
 
 ---
 
