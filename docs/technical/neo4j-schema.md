@@ -1,7 +1,7 @@
 # Neo4j Schema Documentation
 
-**Version**: 0.7.9  
-**Last Updated**: 2026-04-04
+**Version**: 0.8.0  
+**Last Updated**: 2026-04-05
 
 This document describes the complete Neo4j graph schema used by Mapper to store Python code analysis results.
 
@@ -21,7 +21,7 @@ This document describes the complete Neo4j graph schema used by Mapper to store 
 
 ## Overview
 
-Mapper models Python code as a property graph with **5 node types** and **7 relationship types**:
+Mapper models Python code as a property graph with **6 node types** and **8 relationship types**:
 
 **Node Types**:
 - `Module` - Python files/packages
@@ -29,6 +29,7 @@ Mapper models Python code as a property graph with **5 node types** and **7 rela
 - `Function` - Standalone functions
 - `Method` - Class methods
 - `Import` - Import statements
+- `Decorator` - Decorators applied to functions/methods/classes
 
 **Relationship Types**:
 - `DEFINES` - Module defines class/function
@@ -38,6 +39,7 @@ Mapper models Python code as a property graph with **5 node types** and **7 rela
 - `IMPORTS` - Module imports from Import node
 - `FROM_MODULE` - Import node references source module
 - `DEPENDS_ON` - Module depends on another module (deduplicated)
+- `DECORATED_WITH` - Function/method/class decorated with decorator
 
 ---
 
@@ -123,10 +125,22 @@ Represents a standalone function (not a method).
 | `is_public` | boolean | ✓ | True if public (no leading `_`) |
 | `docstring` | string | ✗ | Function docstring |
 | `return_type` | string | ✗ | Return type annotation |
-| `parameters` | string | ✗ | Serialized parameter info (legacy format) |
-| `decorators` | string | ✗ | Serialized decorator info (legacy format) |
+| `parameters` | array[dict] | ✗ | Structured parameter information (v0.8.0+) |
 
-**Note**: `parameters` and `decorators` are currently serialized strings. See [v0.8.0 roadmap](#future-schema-changes) for structured storage plans.
+**Structured Parameters** (v0.8.0+):
+
+Each parameter is stored as a dictionary with the following fields:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | string | Parameter name (e.g., "data", "args", "kwargs") |
+| `type_hint` | string \| null | Type annotation if present |
+| `has_type_hint` | boolean | True if type hint exists |
+| `default` | string \| null | Default value as string representation |
+| `position` | integer | Zero-based position in signature |
+| `kind` | string | Parameter kind: `POSITIONAL_ONLY`, `POSITIONAL_OR_KEYWORD`, `VAR_POSITIONAL`, `KEYWORD_ONLY`, `VAR_KEYWORD` |
+
+**Decorators** are stored as separate `:Decorator` nodes with `DECORATED_WITH` relationships (v0.8.0+).
 
 **Example**:
 ```cypher
@@ -137,8 +151,24 @@ Represents a standalone function (not a method).
   is_public: true,
   docstring: "Process input data and return results",
   return_type: "dict[str, Any]",
-  parameters: "[ParameterInfo(name='data', type='DataFrame'), ...]",
-  decorators: "[{'name': 'cache', 'args': []}]"
+  parameters: [
+    {
+      name: "data",
+      type_hint: "DataFrame",
+      has_type_hint: true,
+      default: null,
+      position: 0,
+      kind: "POSITIONAL_OR_KEYWORD"
+    },
+    {
+      name: "mode",
+      type_hint: "str",
+      has_type_hint: true,
+      default: "'strict'",
+      position: 1,
+      kind: "KEYWORD_ONLY"
+    }
+  ]
 })
 ```
 
@@ -163,13 +193,70 @@ Represents a class method.
   is_public: true,
   docstring: "Drive the vehicle",
   return_type: "None",
-  parameters: "[ParameterInfo(name='self', type=None), ...]"
+  parameters: [
+    {
+      name: "self",
+      type_hint: null,
+      has_type_hint: false,
+      default: null,
+      position: 0,
+      kind: "POSITIONAL_OR_KEYWORD"
+    },
+    {
+      name: "speed",
+      type_hint: "int",
+      has_type_hint: true,
+      default: "60",
+      position: 1,
+      kind: "POSITIONAL_OR_KEYWORD"
+    }
+  ]
 })
 ```
 
 ---
 
-### 5. Import
+### 5. Decorator
+
+Represents a decorator applied to a function, method, or class (v0.8.0+).
+
+**Label**: `:Decorator`
+
+**Properties**:
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `name` | string | ✓ | Decorator name (e.g., "property", "cache", "rate_limit") |
+| `package` | string | ✓ | Package name being analyzed |
+| `args` | string | ✗ | Decorator arguments as string (e.g., "10" in @rate_limit(10)) |
+| `full_text` | string | ✗ | Full decorator text as it appears in source (e.g., "@rate_limit(10)") |
+
+**Decorator Relationships**: Decorators are connected to entities via `DECORATED_WITH` relationships:
+- `Function -[:DECORATED_WITH]-> Decorator`
+- `Method -[:DECORATED_WITH]-> Decorator`
+- `Class -[:DECORATED_WITH]-> Decorator`
+
+**Example**:
+```cypher
+(:Decorator {
+  name: "rate_limit",
+  package: "myapp",
+  args: "10",
+  full_text: "@rate_limit(10)"
+})
+
+// Connected to function
+(:Function {name: "api_call"})-[:DECORATED_WITH]->(:Decorator {name: "rate_limit"})
+```
+
+**Common Decorators**:
+- `@property`, `@staticmethod`, `@classmethod` - Built-in decorators
+- `@dataclass`, `@attrs.define` - Class decorators
+- `@lru_cache`, `@cache` - Caching decorators
+- Custom decorators from your codebase
+
+---
+
+### 6. Import
 
 Represents an import statement (first-class entity as of v0.6.5).
 
@@ -437,6 +524,51 @@ RETURN [m IN nodes(path) | m.name] as cycle
 
 ---
 
+### 8. DECORATED_WITH
+
+**Direction**: Function/Method/Class → Decorator
+
+**Description**: Entity is decorated with a decorator (v0.8.0+). Replaces the serialized `decorators` string property.
+
+**Properties**: None
+
+**Example**:
+```cypher
+(:Function {name: "api_call"})-[:DECORATED_WITH]->(:Decorator {name: "rate_limit"})
+(:Method {name: "name"})-[:DECORATED_WITH]->(:Decorator {name: "property"})
+(:Class {name: "User"})-[:DECORATED_WITH]->(:Decorator {name: "dataclass"})
+```
+
+**Usage**:
+```cypher
+// Find all functions decorated with a specific decorator
+MATCH (f:Function {package: $package})-[:DECORATED_WITH]->(d:Decorator {name: "cache"})
+RETURN f.fqn
+
+// Find all decorators used in a function
+MATCH (f:Function {name: "api_call"})-[:DECORATED_WITH]->(d:Decorator)
+RETURN d.name, d.args, d.full_text
+
+// Find decorators with arguments
+MATCH (entity)-[:DECORATED_WITH]->(d:Decorator {package: $package})
+WHERE d.args IS NOT NULL
+RETURN entity.fqn, d.name, d.args
+ORDER BY entity.fqn
+
+// Count decorator usage
+MATCH (d:Decorator {package: $package})
+RETURN d.name as decorator, count(*) as usage_count
+ORDER BY usage_count DESC
+
+// Find public functions without type hints but with decorators
+MATCH (f:Function {package: $package})-[:DECORATED_WITH]->(d:Decorator)
+WHERE f.is_public = true
+  AND any(param IN f.parameters WHERE param.has_type_hint = false)
+RETURN f.fqn, collect(d.name) as decorators
+```
+
+---
+
 ## Properties
 
 ### Common Properties
@@ -460,11 +592,12 @@ These properties appear on multiple node types:
 | `is_external` | Module | True for external package references |
 | `bases` | Class | Serialized base class names (legacy) |
 | `return_type` | Function, Method | Return type annotation |
-| `parameters` | Function, Method | Serialized parameter info (legacy) |
-| `decorators` | Function, Method | Serialized decorator info (legacy) |
+| `parameters` | Function, Method | Structured array of parameter dicts (v0.8.0+) |
 | `from_module` | Import | Source module name |
 | `submodule_path` | Import | Nested import path |
 | `local_name` | Import | Import alias |
+| `args` | Decorator | Decorator arguments (v0.8.0+) |
+| `full_text` | Decorator | Full decorator text (v0.8.0+) |
 
 ---
 
@@ -657,32 +790,83 @@ RETURN DISTINCT
 ORDER BY cycle_length DESC
 ```
 
+### Structured Properties Queries (v0.8.0+)
+
+Query functions by parameter metadata:
+
+```cypher
+// Find public functions without type hints
+MATCH (f:Function {package: $package})
+WHERE f.is_public = true
+  AND any(param IN f.parameters WHERE param.has_type_hint = false)
+RETURN f.fqn, 
+       [p IN f.parameters WHERE NOT p.has_type_hint | p.name] as untyped_params
+
+// Find functions with keyword-only parameters
+MATCH (f:Function {package: $package})
+UNWIND f.parameters as param
+WITH f, param
+WHERE param.kind = 'KEYWORD_ONLY'
+RETURN DISTINCT f.fqn, collect(param.name) as kw_only_params
+
+// Find functions with default values but no type hints
+MATCH (f:Function {package: $package})
+UNWIND f.parameters as param
+WITH f, param
+WHERE param.default IS NOT NULL AND param.has_type_hint = false
+RETURN f.fqn, param.name, param.default
+
+// Find functions accepting *args or **kwargs
+MATCH (f:Function {package: $package})
+WHERE any(p IN f.parameters WHERE p.kind IN ['VAR_POSITIONAL', 'VAR_KEYWORD'])
+RETURN f.fqn, 
+       [p IN f.parameters WHERE p.kind = 'VAR_POSITIONAL' | p.name] as args,
+       [p IN f.parameters WHERE p.kind = 'VAR_KEYWORD' | p.name] as kwargs
+```
+
+Query decorated entities:
+
+```cypher
+// Find functions decorated with specific decorator
+MATCH (f:Function)-[:DECORATED_WITH]->(d:Decorator {name: "cache"})
+RETURN f.fqn
+
+// Find most commonly used decorators
+MATCH (d:Decorator {package: $package})
+RETURN d.name, count(*) as usage_count
+ORDER BY usage_count DESC
+LIMIT 10
+```
+
 ---
 
-## Future Schema Changes
+## Schema Changes
 
-### v0.8.0 - Structured Property Storage
+### v0.8.0 - Structured Property Storage (IMPLEMENTED)
 
-**Planned improvements** (Issue #30):
+**Completed improvements** (Issue #30):
 
-1. **Decorator Nodes**:
-   - Replace `decorators` string property
-   - Create separate `:Decorator` nodes
-   - Use `-[:DECORATED_WITH]->` relationships
+1. **Decorator Nodes** ✅:
+   - Replaced `decorators` string property
+   - Created separate `:Decorator` nodes
+   - Added `-[:DECORATED_WITH]->` relationships
 
-2. **Structured Parameters**:
-   - Replace `parameters` string property
-   - Store as array of dicts with:
+2. **Structured Parameters** ✅:
+   - Replaced serialized `parameters` string
+   - Now stored as array of dicts with:
      - `name`: Parameter name
-     - `type`: Type annotation (if present)
-     - `default`: Has default value (boolean)
+     - `type_hint`: Type annotation (if present)
+     - `default`: Default value as string
      - `position`: Parameter position
+     - `kind`: Parameter kind (5 types from Python's inspect module)
      - `has_type_hint`: Boolean flag
 
-3. **Benefits**:
-   - Enable code quality queries (e.g., "find public functions without type hints")
-   - More efficient querying
-   - Better data modeling
+3. **Benefits Delivered**:
+   - Enable precise code quality queries
+   - Query by parameter kind, defaults, type hints
+   - Query by decorator name and arguments
+   - More efficient and flexible querying
+   - Better data modeling for Python code
 
 ### Future Enhancements
 
@@ -695,21 +879,35 @@ ORDER BY cycle_length DESC
 
 ## Migration Guide
 
-### From String Properties to Structured Data (v0.8.0)
+### Upgrading to v0.8.0 (Breaking Change)
 
-When v0.8.0 is released, existing graphs can be migrated using Cypher queries to:
+**IMPORTANT**: v0.8.0 introduces breaking changes to the Neo4j schema. Existing graphs created with v0.7.x or earlier are **not compatible** with v0.8.0.
 
-1. Parse existing `decorators` string property
-2. Create Decorator nodes
-3. Create DECORATED_WITH relationships
-4. Parse `parameters` string into structured array
-5. Remove legacy string properties
+**Required Action**: Re-analyze your projects with v0.8.0 to use the new structured properties:
 
-Migration scripts will be provided in the v0.8.0 release notes.
+```bash
+# Clear old analysis data
+mapper analyse clear <package-name>
+
+# Re-analyze with v0.8.0
+mapper analyse start <path-to-project>
+```
+
+**What Changed**:
+- Parameters are now stored as structured arrays instead of serialized strings
+- Decorators are now first-class `:Decorator` nodes with `DECORATED_WITH` relationships
+- New queryability for code quality analysis
+
+**Why Re-analysis is Required**:
+- The old `parameters` string property cannot be automatically parsed into structured data due to format ambiguity
+- The old `decorators` string property needs to be converted to nodes and relationships
+- Re-analysis ensures data integrity and takes advantage of new extraction features
 
 ### Backward Compatibility
 
-New properties (like `exported_names` in v0.7.8) are optional and do not break existing queries. Older nodes without these properties will have `null` values.
+v0.8.0 **removes** the serialized `decorators` property. Queries expecting the old format will not work.
+
+New structured properties enable queries that were not possible in v0.7.x.
 
 ---
 
@@ -721,6 +919,6 @@ New properties (like `exported_names` in v0.7.8) are optional and do not break e
 
 ---
 
-**Generated**: 2026-04-04  
-**Schema Version**: 0.7.8  
-**Mapper Version**: 0.7.8
+**Generated**: 2026-04-05  
+**Schema Version**: 0.8.0  
+**Mapper Version**: 0.8.0
