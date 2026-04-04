@@ -379,9 +379,7 @@ class GraphLoader:
             if decorator.full_text:
                 properties["full_text"] = decorator.full_text
 
-            decorator_node_id = self.connection.create_node(
-                graph.NodeLabel.DECORATOR, properties
-            )
+            decorator_node_id = self.connection.create_node(graph.NodeLabel.DECORATOR, properties)
 
             # Create DECORATED_WITH relationship: Entity -[DECORATED_WITH]-> Decorator
             self.connection.create_relationship(

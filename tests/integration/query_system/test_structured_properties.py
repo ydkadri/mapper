@@ -1,7 +1,5 @@
 """Integration tests for structured properties (parameters and decorators) queries."""
 
-from pathlib import Path
-
 import pytest
 
 from mapper import analyser, graph_loader

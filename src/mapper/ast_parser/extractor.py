@@ -1,7 +1,6 @@
 """AST extraction for Python code."""
 
 import ast
-import inspect
 from pathlib import Path
 
 from mapper import name_resolver
@@ -262,7 +261,9 @@ class ASTExtractor:
 
         # *args (vararg)
         if args.vararg:
-            type_hint = self._get_type_string(args.vararg.annotation) if args.vararg.annotation else None
+            type_hint = (
+                self._get_type_string(args.vararg.annotation) if args.vararg.annotation else None
+            )
             parameters.append(
                 models.ParameterInfo(
                     name=args.vararg.arg,
@@ -280,8 +281,10 @@ class ASTExtractor:
             type_hint = self._get_type_string(arg.annotation) if arg.annotation else None
             # kw_defaults is aligned with kwonlyargs (not right-aligned)
             default = None
-            if i < len(args.kw_defaults) and args.kw_defaults[i] is not None:
-                default = ast.unparse(args.kw_defaults[i])
+            if i < len(args.kw_defaults):
+                default_expr = args.kw_defaults[i]
+                if default_expr is not None:
+                    default = ast.unparse(default_expr)
 
             parameters.append(
                 models.ParameterInfo(
@@ -297,7 +300,9 @@ class ASTExtractor:
 
         # **kwargs (kwarg)
         if args.kwarg:
-            type_hint = self._get_type_string(args.kwarg.annotation) if args.kwarg.annotation else None
+            type_hint = (
+                self._get_type_string(args.kwarg.annotation) if args.kwarg.annotation else None
+            )
             parameters.append(
                 models.ParameterInfo(
                     name=args.kwarg.arg,
