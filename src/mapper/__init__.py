@@ -3,7 +3,7 @@
 # Public modules for programmatic access
 from mapper import analyser, graph, graph_loader
 
-__version__ = "0.7.6"
+__version__ = "0.7.7"
 
 __all__ = [
     # Version
