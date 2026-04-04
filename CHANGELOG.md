@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.7.8] - 2026-04-04
 
+## [0.7.8] - 2026-04-04
+
 ### Added
 - **Dead code detection respects __all__ exports** - Reduces false positives by filtering intentionally exported APIs
   - AST extraction now captures `__all__` assignments from modules
