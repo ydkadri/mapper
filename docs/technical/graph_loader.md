@@ -4,7 +4,7 @@
 
 **Module**: `mapper.graph_loader`
 
-**Last Updated**: 2026-03-24
+**Last Updated**: 2026-04-05 (v0.8.0)
 
 ---
 
@@ -73,13 +73,21 @@ loader.finalize()
   - `is_public`: bool - Whether function is public (based on naming convention)
   - `docstring`: str (optional) - Function docstring
   - `return_type`: str (optional) - Return type annotation
-  - `parameters`: str (optional) - Serialized parameter list
-  - `decorators`: str (optional) - Serialized decorator list
+  - `parameters`: list[dict] (optional) - Structured parameter information (v0.8.0+)
+    - Each parameter dict contains: `name`, `type_hint`, `has_type_hint`, `default`, `position`, `kind`
 
 ### Method
 - **Label**: `Method`
 - **Properties**: Same as Function, but FQN includes class (e.g., "my_module.MyClass.my_method")
 - **Note**: Methods are functions within classes. Visibility determined by naming convention (`_private`, `public`, `__dunder__`)
+
+### Decorator (v0.8.0+)
+- **Label**: `Decorator`
+- **Properties**:
+  - `name`: str - Decorator name (e.g., "property", "cache")
+  - `package`: str - Package name
+  - `args`: str (optional) - Decorator arguments as string
+  - `full_text`: str (optional) - Full decorator text from source
 
 ## Relationship Types Created
 
@@ -91,6 +99,9 @@ Created during `load_extraction()`:
 
 - **CONTAINS**: `(Class)-[:CONTAINS]->(Method)`
   - Class contains a method
+
+- **DECORATED_WITH**: `(Function|Method|Class)-[:DECORATED_WITH]->(Decorator)` (v0.8.0+)
+  - Entity is decorated with a decorator
 
 ### Deferred Relationships
 Created during `finalize()`:
