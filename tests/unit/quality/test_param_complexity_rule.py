@@ -12,27 +12,23 @@ class TestParamComplexityRule:
     def test_name(self):
         """Should return correct machine-readable name."""
         rule = param_complexity.ParamComplexityRule()
-        assert rule.name == "param_complexity"
+        assert rule.name == "param-complexity"
 
-    def test_display_name(self):
-        """Should return correct human-readable name."""
+    def test_description(self):
+        """Should return correct human-readable description."""
         rule = param_complexity.ParamComplexityRule()
-        assert rule.display_name == "Parameter Complexity"
+        assert rule.description == "Enforce parameter count limits on functions"
 
     def test_is_enabled_when_enabled(self):
         """Should return True when rule is enabled."""
         rule = param_complexity.ParamComplexityRule()
-        config = models.QualityConfig(
-            param_complexity=models.ParamComplexityConfig(enabled=True)
-        )
+        config = models.QualityConfig(param_complexity=models.ParamComplexityConfig(enabled=True))
         assert rule.is_enabled(config) is True
 
     def test_is_enabled_when_disabled(self):
         """Should return False when rule is disabled."""
         rule = param_complexity.ParamComplexityRule()
-        config = models.QualityConfig(
-            param_complexity=models.ParamComplexityConfig(enabled=False)
-        )
+        config = models.QualityConfig(param_complexity=models.ParamComplexityConfig(enabled=False))
         assert rule.is_enabled(config) is False
 
     def test_run_no_violations(self, mock_neo4j_connection):

@@ -79,12 +79,25 @@ from mapper.ast_parser import models
 __all__ = ["ASTExtractor", "Node", "Edge", "Graph", "models"]
 ```
 
+```python
+# mapper/ast_parser/extractor.py (regular module - NO __all__)
+
+class ASTExtractor:
+    """Public class - no underscore prefix."""
+    ...
+
+def _validate_ast(tree):
+    """Private helper - underscore prefix."""
+    ...
+```
+
 **Principles:**
 - Only expose classes/functions needed by external consumers
 - If only one class from a submodule is needed, import just that class
 - If multiple things are useful, import them to sit at top level
 - If a submodule is a useful reference, import the whole module
 - Everything in `__all__` should be intentionally public
+- Regular modules use underscore prefixes for private items, NOT `__all__`
 
 **Separate models from logic:**
 - Models/dataclasses in `models.py`

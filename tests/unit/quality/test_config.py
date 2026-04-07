@@ -31,7 +31,7 @@ class TestLoadQualityConfig:
         """Should load custom type coverage configuration."""
         config_file = tmp_path / "mapper.toml"
         config_file.write_text("""
-[quality.type_coverage]
+[quality.type-coverage]
 enabled = false
 min_coverage = 70
 require_return_types = true
@@ -49,7 +49,7 @@ exclude_patterns = ["test_*", "__init__"]
         """Should load custom docstring coverage configuration."""
         config_file = tmp_path / "mapper.toml"
         config_file.write_text("""
-[quality.docstring_coverage]
+[quality.docstring-coverage]
 enabled = false
 min_coverage = 85
 exclude_patterns = ["__str__", "__repr__"]
@@ -65,7 +65,7 @@ exclude_patterns = ["__str__", "__repr__"]
         """Should load custom param complexity configuration."""
         config_file = tmp_path / "mapper.toml"
         config_file.write_text("""
-[quality.param_complexity]
+[quality.param-complexity]
 enabled = false
 max_parameters = 7
 exclude_patterns = ["__init__"]
@@ -81,14 +81,14 @@ exclude_patterns = ["__init__"]
         """Should load all custom configurations together."""
         config_file = tmp_path / "mapper.toml"
         config_file.write_text("""
-[quality.type_coverage]
+[quality.type-coverage]
 enabled = false
 min_coverage = 70
 
-[quality.docstring_coverage]
+[quality.docstring-coverage]
 min_coverage = 85
 
-[quality.param_complexity]
+[quality.param-complexity]
 max_parameters = 7
 """)
 
@@ -103,7 +103,7 @@ max_parameters = 7
         """Should raise ValueError when type coverage below 0."""
         config_file = tmp_path / "mapper.toml"
         config_file.write_text("""
-[quality.type_coverage]
+[quality.type-coverage]
 min_coverage = -10
 """)
 
@@ -114,7 +114,7 @@ min_coverage = -10
         """Should raise ValueError when type coverage above 100."""
         config_file = tmp_path / "mapper.toml"
         config_file.write_text("""
-[quality.type_coverage]
+[quality.type-coverage]
 min_coverage = 110
 """)
 
@@ -125,7 +125,7 @@ min_coverage = 110
         """Should raise ValueError when docstring coverage below 0."""
         config_file = tmp_path / "mapper.toml"
         config_file.write_text("""
-[quality.docstring_coverage]
+[quality.docstring-coverage]
 min_coverage = -10
 """)
 
@@ -136,7 +136,7 @@ min_coverage = -10
         """Should raise ValueError when docstring coverage above 100."""
         config_file = tmp_path / "mapper.toml"
         config_file.write_text("""
-[quality.docstring_coverage]
+[quality.docstring-coverage]
 min_coverage = 150
 """)
 
@@ -147,7 +147,7 @@ min_coverage = 150
         """Should raise ValueError when max_parameters is zero."""
         config_file = tmp_path / "mapper.toml"
         config_file.write_text("""
-[quality.param_complexity]
+[quality.param-complexity]
 max_parameters = 0
 """)
 
@@ -158,7 +158,7 @@ max_parameters = 0
         """Should raise ValueError when max_parameters is negative."""
         config_file = tmp_path / "mapper.toml"
         config_file.write_text("""
-[quality.param_complexity]
+[quality.param-complexity]
 max_parameters = -5
 """)
 
@@ -169,7 +169,7 @@ max_parameters = -5
         """Should use defaults for missing configuration sections."""
         config_file = tmp_path / "mapper.toml"
         config_file.write_text("""
-[quality.type_coverage]
+[quality.type-coverage]
 min_coverage = 75
 """)
 

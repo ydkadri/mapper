@@ -12,8 +12,8 @@ from mapper.quality import models
 class ParamComplexityRule(models.QualityRule):
     """Quality rule for enforcing parameter count limits on functions."""
 
-    name: str = "param_complexity"
-    display_name: str = "Parameter Complexity"
+    name: str = "param-complexity"
+    description: str = "Enforce parameter count limits on functions"
 
     def is_enabled(self, config: models.QualityConfig) -> bool:
         """Check if rule is enabled in configuration."""
@@ -53,9 +53,7 @@ class ParamComplexityRule(models.QualityRule):
         ORDER BY file_path
         """
 
-        with neo4j_connection.driver.session(
-            database=neo4j_connection.database
-        ) as session:
+        with neo4j_connection.driver.session(database=neo4j_connection.database) as session:
             result = session.run(query, package=package, max_parameters=param_cfg.max_parameters)
             records = list(result)
 
@@ -97,6 +95,3 @@ class ParamComplexityRule(models.QualityRule):
             total_violations=total_violations,
             by_file=file_violations,
         )
-
-
-__all__ = ["ParamComplexityRule"]

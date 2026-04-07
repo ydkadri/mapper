@@ -12,12 +12,12 @@ class TestDocstringCoverageRule:
     def test_name(self):
         """Should return correct machine-readable name."""
         rule = docstring_coverage.DocstringCoverageRule()
-        assert rule.name == "docstring_coverage"
+        assert rule.name == "docstring-coverage"
 
-    def test_display_name(self):
-        """Should return correct human-readable name."""
+    def test_description(self):
+        """Should return correct human-readable description."""
         rule = docstring_coverage.DocstringCoverageRule()
-        assert rule.display_name == "Docstring Coverage"
+        assert rule.description == "Enforce docstring coverage on public functions"
 
     def test_is_enabled_when_enabled(self):
         """Should return True when rule is enabled."""

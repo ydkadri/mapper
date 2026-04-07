@@ -1,7 +1,5 @@
 """Quality rule registry for managing built-in quality rules."""
 
-from typing import Optional
-
 from mapper.quality import models
 from mapper.quality.rules import BUILTIN_RULES
 
@@ -18,7 +16,7 @@ class QualityRuleRegistry:
         for rule in BUILTIN_RULES:
             self._rules[rule.name] = rule
 
-    def get(self, name: str) -> Optional[models.QualityRule]:
+    def get(self, name: str) -> models.QualityRule | None:
         """Get quality rule by name.
 
         Args:
@@ -57,6 +55,3 @@ def get_registry() -> QualityRuleRegistry:
         Global QualityRuleRegistry instance
     """
     return _registry
-
-
-__all__ = ["QualityRuleRegistry", "get_registry"]

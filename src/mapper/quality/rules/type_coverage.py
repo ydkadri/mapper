@@ -12,8 +12,8 @@ from mapper.quality import models
 class TypeCoverageRule(models.QualityRule):
     """Quality rule for enforcing type hint coverage on public functions."""
 
-    name: str = "type_coverage"
-    display_name: str = "Type Coverage"
+    name: str = "type-coverage"
+    description: str = "Enforce type hint coverage on public functions"
 
     def is_enabled(self, config: models.QualityConfig) -> bool:
         """Check if rule is enabled in configuration."""
@@ -102,7 +102,9 @@ class TypeCoverageRule(models.QualityRule):
             total_compliant += actual_compliant
 
         # Calculate overall percentage
-        overall_percentage = (total_compliant / total_functions * 100) if total_functions > 0 else 0.0
+        overall_percentage = (
+            (total_compliant / total_functions * 100) if total_functions > 0 else 0.0
+        )
 
         return models.CoverageQualityResult(
             rule=self.name,
@@ -115,6 +117,3 @@ class TypeCoverageRule(models.QualityRule):
             ),
             by_file=file_results,
         )
-
-
-__all__ = ["TypeCoverageRule"]
