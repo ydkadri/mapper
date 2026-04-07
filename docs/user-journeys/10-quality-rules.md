@@ -39,18 +39,18 @@ Quality rules provide built-in pass/fail checks for code quality standards. Unli
 Create or update `mapper.toml` with quality rule thresholds:
 
 ```toml
-[quality.type_coverage]
+[quality.type-coverage]
 enabled = true
 min_coverage = 80           # percentage
 require_return_types = true
 exclude_patterns = ["test_*", "__init__"]
 
-[quality.docstring_coverage]
+[quality.docstring-coverage]
 enabled = true
 min_coverage = 90
 exclude_patterns = ["__str__", "__repr__"]
 
-[quality.param_complexity]
+[quality.param-complexity]
 enabled = true
 max_parameters = 5
 exclude_patterns = ["__init__"]
@@ -155,7 +155,7 @@ Exit code: 1
 $ mapper quality check --json
 [
   {
-    "rule": "type_coverage",
+    "rule": "type-coverage",
     "status": "pass",
     "threshold": 80,
     "actual": 85.0,
@@ -175,7 +175,7 @@ $ mapper quality check --json
     ]
   },
   {
-    "rule": "docstring_coverage",
+    "rule": "docstring-coverage",
     "status": "fail",
     "threshold": 90,
     "actual": 75.8,
@@ -195,7 +195,7 @@ $ mapper quality check --json
     ]
   },
   {
-    "rule": "param_complexity",
+    "rule": "param-complexity",
     "status": "fail",
     "threshold": 5,
     "total_violations": 3,
@@ -223,15 +223,15 @@ $ mapper quality check --json
 ```bash
 $ mapper quality check --csv
 rule,file_path,total_functions,compliant_functions,compliance_percentage,status
-type_coverage,src/mapper/analyser/main.py,15,12,80.0,pass
-type_coverage,src/mapper/graph_loader/loader.py,10,8,80.0,pass
-type_coverage,src/mapper/query_system/queries.py,8,7,87.5,pass
-docstring_coverage,src/mapper/analyser/main.py,15,10,66.7,fail
-docstring_coverage,src/mapper/graph_loader/loader.py,10,8,80.0,fail
-docstring_coverage,src/mapper/query_system/queries.py,8,7,87.5,pass
-param_complexity,src/mapper/analyser/main.py,15,13,86.7,fail
-param_complexity,src/mapper/graph_loader/loader.py,10,9,90.0,fail
-param_complexity,src/mapper/query_system/queries.py,8,8,100.0,pass
+type-coverage,src/mapper/analyser/main.py,15,12,80.0,pass
+type-coverage,src/mapper/graph_loader/loader.py,10,8,80.0,pass
+type-coverage,src/mapper/query_system/queries.py,8,7,87.5,pass
+docstring-coverage,src/mapper/analyser/main.py,15,10,66.7,fail
+docstring-coverage,src/mapper/graph_loader/loader.py,10,8,80.0,fail
+docstring-coverage,src/mapper/query_system/queries.py,8,7,87.5,pass
+param-complexity,src/mapper/analyser/main.py,15,13,86.7,fail
+param-complexity,src/mapper/graph_loader/loader.py,10,9,90.0,fail
+param-complexity,src/mapper/query_system/queries.py,8,8,100.0,pass
 ```
 
 ---
@@ -302,7 +302,7 @@ mapper quality check --json | jq 'any(.[]; .status == "fail")'
 **Get all failed rules:**
 ```bash
 mapper quality check --json | jq -r '.[] | select(.status == "fail") | .rule'
-# Output: docstring_coverage
+# Output: docstring-coverage
 ```
 
 **Count violations per file:**

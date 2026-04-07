@@ -115,7 +115,7 @@ Quality rules are configured in `mapper.toml` under `[quality.*]` sections.
 ### Type Coverage Configuration
 
 ```toml
-[quality.type_coverage]
+[quality.type-coverage]
 enabled = true                    # Enable/disable rule
 min_coverage = 80                 # Minimum percentage (0-100)
 require_return_types = true       # Require return type hints
@@ -133,7 +133,7 @@ exclude_patterns = ["test_*", "__init__"]  # Exclude functions matching patterns
 ### Docstring Coverage Configuration
 
 ```toml
-[quality.docstring_coverage]
+[quality.docstring-coverage]
 enabled = true                    # Enable/disable rule
 min_coverage = 90                 # Minimum percentage (0-100)
 exclude_patterns = ["__str__", "__repr__", "__init__"]  # Exclude functions
@@ -149,7 +149,7 @@ exclude_patterns = ["__str__", "__repr__", "__init__"]  # Exclude functions
 ### Parameter Complexity Configuration
 
 ```toml
-[quality.param_complexity]
+[quality.param-complexity]
 enabled = true                    # Enable/disable rule
 max_parameters = 5                # Maximum parameter count
 exclude_patterns = ["__init__"]   # Exclude functions matching patterns
@@ -204,7 +204,7 @@ Returns array of quality rule results. Each rule has a different structure based
 **Type Coverage / Docstring Coverage** (percentage-based rules):
 ```json
 {
-  "rule": "type_coverage",
+  "rule": "type-coverage",
   "status": "pass" | "fail",
   "threshold": 80,
   "actual": 85.0,
@@ -228,7 +228,7 @@ Returns array of quality rule results. Each rule has a different structure based
 **Parameter Complexity** (count-based rule):
 ```json
 {
-  "rule": "param_complexity",
+  "rule": "param-complexity",
   "status": "pass" | "fail",
   "threshold": 5,
   "total_violations": 3,
@@ -248,7 +248,7 @@ Returns array of quality rule results. Each rule has a different structure based
 ```json
 [
   {
-    "rule": "type_coverage",
+    "rule": "type-coverage",
     "status": "pass",
     "threshold": 80,
     "actual": 85.0,
@@ -268,7 +268,7 @@ Returns array of quality rule results. Each rule has a different structure based
     ]
   },
   {
-    "rule": "docstring_coverage",
+    "rule": "docstring-coverage",
     "status": "fail",
     "threshold": 90,
     "actual": 75.8,
@@ -288,7 +288,7 @@ Returns array of quality rule results. Each rule has a different structure based
     ]
   },
   {
-    "rule": "param_complexity",
+    "rule": "param-complexity",
     "status": "fail",
     "threshold": 5,
     "total_violations": 3,
@@ -644,7 +644,7 @@ class CSVFormatter:
 ### Configuration Loading
 
 Configuration is loaded from `mapper.toml`:
-1. Check for `[quality.type_coverage]`, `[quality.docstring_coverage]`, `[quality.param_complexity]` sections
+1. Check for `[quality.type-coverage]`, `[quality.docstring-coverage]`, `[quality.param-complexity]` sections
 2. If section missing, use default configuration
 3. Validate configuration values (e.g., percentages 0-100, max_parameters > 0)
 

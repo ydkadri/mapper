@@ -12,8 +12,8 @@ from mapper.quality import models
 class DocstringCoverageRule(models.QualityRule):
     """Quality rule for enforcing docstring coverage on public functions."""
 
-    name: str = "docstring_coverage"
-    display_name: str = "Docstring Coverage"
+    name: str = "docstring-coverage"
+    description: str = "Enforce docstring coverage on public functions"
 
     def is_enabled(self, config: models.QualityConfig) -> bool:
         """Check if rule is enabled in configuration."""
@@ -95,7 +95,9 @@ class DocstringCoverageRule(models.QualityRule):
             total_compliant += actual_compliant
 
         # Calculate overall percentage
-        overall_percentage = (total_compliant / total_functions * 100) if total_functions > 0 else 0.0
+        overall_percentage = (
+            (total_compliant / total_functions * 100) if total_functions > 0 else 0.0
+        )
 
         return models.CoverageQualityResult(
             rule=self.name,
@@ -108,6 +110,3 @@ class DocstringCoverageRule(models.QualityRule):
             ),
             by_file=file_results,
         )
-
-
-__all__ = ["DocstringCoverageRule"]

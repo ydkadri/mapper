@@ -12,27 +12,23 @@ class TestTypeCoverageRule:
     def test_name(self):
         """Should return correct machine-readable name."""
         rule = type_coverage.TypeCoverageRule()
-        assert rule.name == "type_coverage"
+        assert rule.name == "type-coverage"
 
-    def test_display_name(self):
-        """Should return correct human-readable name."""
+    def test_description(self):
+        """Should return correct human-readable description."""
         rule = type_coverage.TypeCoverageRule()
-        assert rule.display_name == "Type Coverage"
+        assert rule.description == "Enforce type hint coverage on public functions"
 
     def test_is_enabled_when_enabled(self):
         """Should return True when rule is enabled."""
         rule = type_coverage.TypeCoverageRule()
-        config = models.QualityConfig(
-            type_coverage=models.TypeCoverageConfig(enabled=True)
-        )
+        config = models.QualityConfig(type_coverage=models.TypeCoverageConfig(enabled=True))
         assert rule.is_enabled(config) is True
 
     def test_is_enabled_when_disabled(self):
         """Should return False when rule is disabled."""
         rule = type_coverage.TypeCoverageRule()
-        config = models.QualityConfig(
-            type_coverage=models.TypeCoverageConfig(enabled=False)
-        )
+        config = models.QualityConfig(type_coverage=models.TypeCoverageConfig(enabled=False))
         assert rule.is_enabled(config) is False
 
     def test_run_passing_threshold(self, mock_neo4j_connection):

@@ -1,7 +1,6 @@
 """Quality rule models and base class."""
 
 from abc import ABC, abstractmethod
-from typing import Union
 
 import attrs
 
@@ -217,13 +216,13 @@ class QualityRule(ABC):
     @property
     @abstractmethod
     def name(self) -> str:
-        """Machine-readable rule identifier (e.g., 'type_coverage')."""
+        """Machine-readable rule identifier (e.g., 'type-coverage')."""
         ...
 
     @property
     @abstractmethod
-    def display_name(self) -> str:
-        """Human-readable rule name (e.g., 'Type Coverage')."""
+    def description(self) -> str:
+        """Human-readable rule description (e.g., 'Enforce type hint coverage on public functions')."""
         ...
 
     @abstractmethod
@@ -241,7 +240,7 @@ class QualityRule(ABC):
     @abstractmethod
     def run(
         self, neo4j_connection: graph.Neo4jConnection, package: str
-    ) -> Union[CoverageQualityResult, ComplexityQualityResult]:
+    ) -> CoverageQualityResult | ComplexityQualityResult:
         """Execute quality rule and return result.
 
         Args:
@@ -252,18 +251,3 @@ class QualityRule(ABC):
             Quality result with pass/fail status
         """
         ...
-
-
-__all__ = [
-    "TypeCoverageConfig",
-    "DocstringCoverageConfig",
-    "ParamComplexityConfig",
-    "QualityConfig",
-    "FileResult",
-    "OverallResult",
-    "CoverageQualityResult",
-    "ViolationDetail",
-    "FileViolations",
-    "ComplexityQualityResult",
-    "QualityRule",
-]
