@@ -171,9 +171,7 @@ class TestQualityExecutor:
             with pytest.raises(ValueError, match="No quality rules are enabled"):
                 exec.execute_all("testpackage", mock_config)
 
-    def test_execute_all_loads_config_if_none(
-        self, mock_connection, sample_coverage_result
-    ):
+    def test_execute_all_loads_config_if_none(self, mock_connection, sample_coverage_result):
         """Should load config from file if not provided."""
         exec = executor.QualityExecutor(mock_connection)
 

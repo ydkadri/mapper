@@ -40,9 +40,7 @@ class QualityExecutor:
         rule = self.registry.get(rule_name)
         if rule is None:
             available = ", ".join(self.registry.get_rule_names())
-            raise ValueError(
-                f"Quality rule '{rule_name}' not found. Available rules: {available}"
-            )
+            raise ValueError(f"Quality rule '{rule_name}' not found. Available rules: {available}")
 
         # Check if rule is enabled
         if not rule.is_enabled(quality_config):
