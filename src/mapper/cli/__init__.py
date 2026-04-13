@@ -2,7 +2,7 @@
 
 import typer
 
-from mapper.cli import analyse, config, queries, setup, status, version
+from mapper.cli import analyse, config, quality, queries, setup, status, version
 
 # Main application
 app = typer.Typer(help="Mapper - Application Mapper for Python code")
@@ -15,6 +15,7 @@ app.command(name="version")(version.version)
 # Register command groups
 app.add_typer(analyse.app, name="analyse")
 app.add_typer(queries.app, name="query")
+app.add_typer(quality.app, name="quality")
 app.add_typer(config.app, name="config")
 
 
