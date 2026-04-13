@@ -39,16 +39,20 @@ class ParamComplexityRule(models.QualityRule):
 
         # Build Cypher query to find functions exceeding parameter threshold
         query = """
-        MATCH (f:Function {package: $package})
+        MATCH (m:Module)-[:DEFINES]->(f:Function {package: $package})
         WHERE f.is_public = true
-          AND size(f.parameters) > $max_parameters
 
-        // Return violations grouped by file
-        RETURN f.file_path as file_path,
+        // Count parameters via HAS_PARAMETER relationships
+        OPTIONAL MATCH (f)-[:HAS_PARAMETER]->(p:Parameter)
+        WITH m, f, count(p) as param_count
+        WHERE param_count > $max_parameters
+
+        // Return violations grouped by file (using Module.path)
+        RETURN m.path as file_path,
                collect({
                  function: f.name,
-                 line: f.start_line,
-                 param_count: size(f.parameters)
+                 line: null,
+                 param_count: param_count
                }) as violations
         ORDER BY file_path
         """

@@ -39,17 +39,17 @@ class DocstringCoverageRule(models.QualityRule):
 
         # Build Cypher query to find functions with/without docstrings
         query = """
-        MATCH (f:Function {package: $package})
+        MATCH (m:Module)-[:DEFINES]->(f:Function {package: $package})
         WHERE f.is_public = true
 
         // Check if function has docstring
-        WITH f,
+        WITH m, f,
              CASE WHEN f.docstring IS NOT NULL AND f.docstring <> "" THEN true
                   ELSE false
              END as has_docstring
 
-        // Aggregate by file
-        RETURN f.file_path as file_path,
+        // Aggregate by file (using Module.path)
+        RETURN m.path as file_path,
                count(*) as total,
                sum(CASE WHEN has_docstring THEN 1 ELSE 0 END) as compliant,
                collect(CASE WHEN NOT has_docstring THEN f.name ELSE null END) as violations

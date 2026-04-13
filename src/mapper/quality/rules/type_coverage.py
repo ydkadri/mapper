@@ -39,24 +39,25 @@ class TypeCoverageRule(models.QualityRule):
 
         # Build Cypher query to find functions with/without type hints
         query = """
-        MATCH (f:Function {package: $package})
+        MATCH (m:Module)-[:DEFINES]->(f:Function {package: $package})
         WHERE f.is_public = true
 
-        // Count parameters with type hints
-        WITH f,
-             size([p IN f.parameters WHERE p.has_type_hint = true]) as typed_params,
-             size(f.parameters) as total_params
+        // Count parameters with type hints via HAS_PARAMETER relationships
+        OPTIONAL MATCH (f)-[:HAS_PARAMETER]->(p:Parameter)
+        WITH m, f,
+             count(p) as total_params,
+             sum(CASE WHEN p.has_type_hint = true THEN 1 ELSE 0 END) as typed_params
 
         // Function has type coverage if all params have type hints
         // (or has no parameters)
-        WITH f,
+        WITH m, f,
              CASE WHEN total_params = 0 THEN true
                   WHEN typed_params = total_params THEN true
                   ELSE false
              END as has_type_coverage
 
-        // Aggregate by file
-        RETURN f.file_path as file_path,
+        // Aggregate by file (using Module.path)
+        RETURN m.path as file_path,
                count(*) as total,
                sum(CASE WHEN has_type_coverage THEN 1 ELSE 0 END) as compliant,
                collect(CASE WHEN NOT has_type_coverage THEN f.name ELSE null END) as violations
