@@ -3,7 +3,6 @@
 from unittest import mock
 
 import pytest
-import typer
 from typer.testing import CliRunner
 
 from mapper.cli.quality import app
@@ -163,9 +162,7 @@ class TestQualityCheck:
     @mock.patch("mapper.cli.quality.graph.Neo4jConnection")
     @mock.patch("mapper.cli.quality.config_manager.load_config")
     @mock.patch("mapper.cli.quality.config_manager.get_neo4j_credentials")
-    def test_check_connection_failed(
-        self, mock_get_creds, mock_load_config, mock_connection_class
-    ):
+    def test_check_connection_failed(self, mock_get_creds, mock_load_config, mock_connection_class):
         """Should exit 1 when Neo4j connection fails."""
         mock_get_creds.return_value = ("user", "password")
         mock_config = mock.MagicMock()

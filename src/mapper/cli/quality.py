@@ -180,9 +180,7 @@ def docstring_coverage_command(
         mapper quality docstring-coverage mypackage
         mapper quality docstring-coverage mypackage --json
     """
-    _run_single_rule(
-        "docstring-coverage", package, format_type, json_flag, csv_flag, config_path
-    )
+    _run_single_rule("docstring-coverage", package, format_type, json_flag, csv_flag, config_path)
 
 
 @app.command(name="param-complexity")
@@ -210,9 +208,7 @@ def param_complexity_command(
         mapper quality param-complexity mypackage
         mapper quality param-complexity mypackage --json
     """
-    _run_single_rule(
-        "param-complexity", package, format_type, json_flag, csv_flag, config_path
-    )
+    _run_single_rule("param-complexity", package, format_type, json_flag, csv_flag, config_path)
 
 
 def _run_single_rule(
