@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-04-13
+
+### Added
+- **Built-in quality rules** - Three quality checks for enforcing code standards
+  - `type-coverage` - Enforce type hint coverage on public functions (default: 80% minimum)
+  - `docstring-coverage` - Enforce docstring coverage on public functions (default: 90% minimum)
+  - `param-complexity` - Enforce parameter count limits (default: 5 parameters maximum)
+  - Pass/fail semantics with exit codes for CI/CD integration
+  - Configurable thresholds and exclusion patterns via `mapper.toml`
+- **Quality check output formats** - Console, JSON, and CSV formatters
+  - Console: Human-readable with Rich markup (colors, check marks ✓/✗)
+  - JSON: Structured output for CI/CD integration and automation
+  - CSV: Spreadsheet-compatible format for tracking quality over time
+- **Quality configuration system** - TOML-based configuration with validation
+  - `[quality.type-coverage]` section for type hint settings
+  - `[quality.docstring-coverage]` section for docstring settings
+  - `[quality.param-complexity]` section for parameter limit settings
+  - Per-rule enable/disable flags and exclusion patterns
+- **User journey and interface documentation** - Complete quality rules documentation
+  - User journey: CLI usage, configuration examples, CI/CD integration
+  - Interface design: Data models, query patterns, formatter specifications
+
+### Changed
+- Quality rule names use hyphens (consistent with query naming: `find-dead-code`)
+- Quality rules use `description` field (consistent with Query base class)
+
 ## [0.8.0] - 2026-04-05
 
 ### Added
