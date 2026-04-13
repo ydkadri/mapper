@@ -18,6 +18,7 @@ Mapper helps you understand complex Python applications by analysing their Abstr
 - **Incremental Updates**: Track versions and update only what changed
 - **CLI Tool**: Powerful command-line interface built with Typer
 - **Risk Detection Queries**: Built-in queries to find dead code, module centrality, and critical functions
+- **Quality Rules**: Enforce type coverage, docstring coverage, and parameter complexity standards
 - **Package-Wide Analysis**: Analyse entire Python packages from a directory
 
 ### Use Cases
@@ -76,6 +77,11 @@ mapper analyse start /path/to/package
 mapper query list                              # List available queries
 mapper query run find-dead-code mypackage      # Find unused code
 mapper query run analyze-module-centrality mypackage  # Find central modules
+
+# Run quality checks (CI/CD integration)
+mapper quality type-coverage mypackage         # Check type hint coverage
+mapper quality docstring-coverage mypackage    # Check docstring coverage
+mapper quality check mypackage --json          # Run all quality checks
 
 # View detailed analysis in Neo4j Browser
 # Navigate to http://localhost:7474 and run Cypher queries
