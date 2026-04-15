@@ -7,6 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.2] - 2026-04-14
+
+### Added
+- **Quality rules CLI commands** - Complete user-facing interface for code quality checks
+  - `mapper quality list` - List all available quality rules with descriptions
+  - `mapper quality check <package>` - Run all enabled quality rules
+  - `mapper quality type-coverage <package>` - Check type hint coverage
+  - `mapper quality docstring-coverage <package>` - Check docstring coverage
+  - `mapper quality param-complexity <package>` - Check parameter counts
+  - All commands support `--json` and `--csv` flags for CI/CD integration
+  - Exit codes: 0 for pass, 1 for fail (enables blocking in CI pipelines)
+  - Rich console output with colors, file-level breakdowns, and violation details
+- **Quality rule executor** - `QualityExecutor` class for running rules against Neo4j
+  - `execute(rule_name, package, config)` - Run single rule with validation
+  - `execute_all(package, config)` - Run all enabled rules
+  - Automatic config loading from `mapper.toml`
+  - Error handling for missing/disabled rules and connection failures
+- **Comprehensive unit tests** - 17 new tests for CLI and executor
+  - 9 executor tests: single/all rule execution, config loading, validation
+  - 8 CLI tests: all commands, exit codes, output formats, error handling
+  - All tests use mocking for fast, isolated validation
+
+### Fixed
+- **Quality rule Neo4j schema compatibility** - Updated queries to work with current graph structure
+  - File paths now retrieved from `Module.path` via DEFINES relationships (not Function.file_path)
+  - Parameter counts calculated via HAS_PARAMETER relationships (not array property)
+  - Line numbers deferred to v0.8.4 (tracked in GitHub issue #87)
+  - All three rules (type-coverage, docstring-coverage, param-complexity) working correctly
+  - Manual test against real codebase (32 functions): type coverage 100%, docstring coverage 50%, param complexity 1 violation
+
+### Changed
+- Test file renamed from `test_executor.py` to `test_quality_executor.py` to avoid pytest collection conflict with query system executor tests
+
+### Documentation
+- Added v0.8.4 roadmap entry for line number storage (GitHub issue #87)
+- Line numbers will enable "function_name (line 45): 8 parameters" output format
+
+### Test Coverage
+- Total test count: 290 unit tests (up from 256)
+- Coverage: 81% (exceeds 75% threshold)
+- All quality rules validated with both unit and manual integration testing
+
+### Notes
+- v0.8.2 completes the quality rules feature that shipped incomplete in v0.8.1
+- v0.8.1 shipped foundation (models, queries, formatters) but CLI was missing
+- Users can now use quality rules via `mapper quality` commands
+
 ## [0.8.1] - 2026-04-13
 
 ### Added
