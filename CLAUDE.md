@@ -423,4 +423,4 @@ Review these documents to understand patterns and best practices:
 ---
 
 **Last Updated**: 2026-05-01  
-**Current Version**: 0.8.4
+**Current Version**: 0.9.0
