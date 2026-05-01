@@ -5,6 +5,7 @@ from pathlib import Path
 
 from mapper import name_resolver
 from mapper.ast_parser import models
+from mapper.type_inference import type_utils
 
 
 class ASTExtractor:
@@ -421,17 +422,16 @@ class ASTExtractor:
     def _get_type_string(self, node: ast.expr) -> str:
         """Convert type annotation node to string.
 
+        Supports simple types, generic types (list[int], dict[str, Any]),
+        union types (str | None), and Optional types.
+
         Args:
             node: AST type annotation node
 
         Returns:
             Type as string
         """
-        if isinstance(node, ast.Name):
-            return node.id
-        elif isinstance(node, ast.Constant):
-            return str(node.value)
-        return "Unknown"
+        return type_utils.parse_type_annotation(node)
 
     def _get_attribute_string(self, node: ast.Attribute) -> str:
         """Convert attribute node to string.
