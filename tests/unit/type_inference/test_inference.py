@@ -170,3 +170,35 @@ class TestTypeInferrer:
         # Functions with no return statement implicitly return None
         assert result.inferred_type == "None"
         assert result.confidence == "high"
+
+    def test_infer_with_generic_type_annotations(self):
+        """Test that generic type annotations are properly extracted and used."""
+        code = textwrap.dedent(
+            """
+            def process_list() -> list[int]:
+                return [1, 2, 3]
+
+            def process_dict() -> dict[str, Any]:
+                return {"key": "value"}
+
+            def optional_result() -> str | None:
+                if True:
+                    return "result"
+                return None
+        """
+        )
+
+        inferrer = self._create_inferrer(code)
+
+        # Test that generic type annotations are properly extracted
+        list_result = inferrer.infer_function_return("process_list")
+        assert list_result.inferred_type == "list[int]"
+        assert list_result.confidence == "high"
+
+        dict_result = inferrer.infer_function_return("process_dict")
+        assert dict_result.inferred_type == "dict[str, Any]"
+        assert dict_result.confidence == "high"
+
+        optional_result = inferrer.infer_function_return("optional_result")
+        assert optional_result.inferred_type == "str | None"
+        assert optional_result.confidence == "high"

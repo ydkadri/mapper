@@ -3,7 +3,7 @@
 import ast
 
 from mapper import ast_parser
-from mapper.type_inference import models
+from mapper.type_inference import models, type_utils
 
 
 class TypeInferrer:
@@ -177,14 +177,13 @@ class TypeInferrer:
     def _get_type_string(self, node: ast.expr) -> str:
         """Convert type annotation node to string.
 
+        Supports simple types, generic types (list[int], dict[str, Any]),
+        union types (str | None), and Optional types.
+
         Args:
             node: AST type annotation node
 
         Returns:
             Type as string
         """
-        if isinstance(node, ast.Name):
-            return node.id
-        elif isinstance(node, ast.Constant):
-            return str(node.value)
-        return "Unknown"
+        return type_utils.parse_type_annotation(node)
