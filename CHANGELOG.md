@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.3] - 2026-04-14
+
+### Changed
+- **Immutable registry keys with Literal types** - Type-safe name fields for queries and quality rules
+  - Query names now use `Literal["exact-name"]` instead of `str` for all 5 built-in queries
+    - `find-dead-code`, `analyze-module-centrality`, `find-critical-functions`, `analyze-call-complexity`, `detect-circular-dependencies`
+  - Quality rule names now use `Literal["exact-name"]` instead of `str` for all 3 built-in rules
+    - `type-coverage`, `docstring-coverage`, `param-complexity`
+  - Benefits:
+    - **Type safety**: Typos in registry lookups caught at type-check time instead of runtime
+    - **IDE autocomplete**: IDEs can suggest valid query/rule names from Literal type
+    - **Immutability**: Frozen attrs classes with Literal types prevent runtime name modifications
+    - **Self-documenting**: Type signature shows exact valid values
+  - No behavior changes - purely a type safety improvement
+  - All 289 tests passing
+
 ## [0.8.2] - 2026-04-14
 
 ### Added
