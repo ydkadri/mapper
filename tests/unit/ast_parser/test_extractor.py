@@ -218,6 +218,44 @@ class TestASTExtractor:
         func = result.functions[0]
         assert func.return_type == "User"
 
+    def test_extract_generic_type_annotations(self):
+        """Test extracting generic type annotations (list, dict, Optional, union)."""
+        code = textwrap.dedent("""
+            def process_list(items: list[str]) -> list[int]:
+                return [1, 2, 3]
+
+            def process_dict(data: dict[str, Any]) -> dict[str, int]:
+                return {"count": 5}
+
+            def optional_result() -> str | None:
+                return None
+
+            def optional_param(value: Optional[int]) -> int:
+                return value or 0
+        """)
+
+        extractor = ast_parser.ASTExtractor(code, "module.py")
+        result = extractor.extract()
+
+        # Test list[str] -> list[int]
+        process_list = next(f for f in result.functions if f.name == "process_list")
+        assert process_list.parameters[0].type_hint == "list[str]"
+        assert process_list.return_type == "list[int]"
+
+        # Test dict[str, Any] -> dict[str, int]
+        process_dict = next(f for f in result.functions if f.name == "process_dict")
+        assert process_dict.parameters[0].type_hint == "dict[str, Any]"
+        assert process_dict.return_type == "dict[str, int]"
+
+        # Test union type: str | None
+        optional_result = next(f for f in result.functions if f.name == "optional_result")
+        assert optional_result.return_type == "str | None"
+
+        # Test Optional[int]
+        optional_param = next(f for f in result.functions if f.name == "optional_param")
+        assert optional_param.parameters[0].type_hint == "Optional[int]"
+        assert optional_param.return_type == "int"
+
     def test_extract_invalid_syntax(self):
         """Test extracting from code with syntax errors."""
         code = "def invalid syntax here"
