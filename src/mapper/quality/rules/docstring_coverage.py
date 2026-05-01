@@ -1,6 +1,7 @@
 """Docstring coverage quality rule implementation."""
 
 import fnmatch
+from typing import Literal
 
 import attrs
 
@@ -12,7 +13,7 @@ from mapper.quality import models
 class DocstringCoverageRule(models.QualityRule):
     """Quality rule for enforcing docstring coverage on public functions."""
 
-    name: str = "docstring-coverage"
+    name: Literal["docstring-coverage"] = "docstring-coverage"
     description: str = "Enforce docstring coverage on public functions"
 
     def is_enabled(self, config: models.QualityConfig) -> bool:

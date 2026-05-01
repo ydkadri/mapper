@@ -1,6 +1,7 @@
 """Parameter complexity quality rule implementation."""
 
 import fnmatch
+from typing import Literal
 
 import attrs
 
@@ -12,7 +13,7 @@ from mapper.quality import models
 class ParamComplexityRule(models.QualityRule):
     """Quality rule for enforcing parameter count limits on functions."""
 
-    name: str = "param-complexity"
+    name: Literal["param-complexity"] = "param-complexity"
     description: str = "Enforce parameter count limits on functions"
 
     def is_enabled(self, config: models.QualityConfig) -> bool:
