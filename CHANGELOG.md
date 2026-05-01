@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.4] - 2026-05-01
+
+### Added
+- **Line number storage** - Functions, methods, and classes now store their source code line numbers
+  - Added `line_number` field to `FunctionInfo` and `ClassInfo` models
+  - AST extractor captures `lineno` attribute from AST nodes
+  - Graph loader stores `line_number` property in Neo4j for Function, Method, and Class nodes
+  - Parameter complexity quality rule now returns line numbers in violation output
+  - Enables "navigate to source" functionality for quality rule violations
+  - **User Outcome**: Users can navigate directly to violations in their code
+  - All 289 unit tests passing
+
 ## [0.8.3] - 2026-04-14
 
 ### Changed
