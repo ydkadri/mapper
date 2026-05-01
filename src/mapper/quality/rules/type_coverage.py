@@ -1,6 +1,7 @@
 """Type coverage quality rule implementation."""
 
 import fnmatch
+from typing import Literal
 
 import attrs
 
@@ -12,7 +13,7 @@ from mapper.quality import models
 class TypeCoverageRule(models.QualityRule):
     """Quality rule for enforcing type hint coverage on public functions."""
 
-    name: str = "type-coverage"
+    name: Literal["type-coverage"] = "type-coverage"
     description: str = "Enforce type hint coverage on public functions"
 
     def is_enabled(self, config: models.QualityConfig) -> bool:
