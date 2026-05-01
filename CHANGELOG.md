@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-05-01
+
+### Added
+- **Generic type parsing** - Full support for generic type annotations in Python code
+  - Parse `list[T]`, `dict[K, V]`, `set[T]`, `tuple[T, ...]` generic types
+  - Parse union types: `X | None`, `int | str | None`
+  - Parse `Optional[T]` from typing module
+  - Parse nested generics: `list[dict[str, int]]`, `dict[str, list[int]]`
+  - Support typing module aliases: `List[int]`, `Dict[str, Any]`
+  - **User Outcome**: Eliminates false positive warnings from type inference
+  - Created `type_utils.parse_type_annotation()` helper for consistent type parsing
+  - Updated `ASTExtractor._get_type_string()` to use helper
+  - Updated `TypeInferrer._get_type_string()` to use helper
+  - All 312 unit tests passing (20 new tests added)
+
+### Changed
+- Type annotations now preserve full generic information instead of erasing to base type
+  - Before: `list[int]` → stored as "list"
+  - After: `list[int]` → stored as "list[int]"
+- Type inference validation now correctly compares generic types
+
 ## [0.8.4] - 2026-05-01
 
 ### Added
