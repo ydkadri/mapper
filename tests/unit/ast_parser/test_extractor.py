@@ -291,3 +291,56 @@ class TestASTExtractor:
 
         init_method = next(m for m in public_class.methods if m.name == "__init__")
         assert init_method.is_public is True
+
+    def test_line_number_extraction(self):
+        """Test that line numbers are captured for functions and classes."""
+        code = textwrap.dedent('''
+            """Module docstring."""
+
+            def first_function():
+                """First function on line 4."""
+                pass
+
+            def second_function():
+                """Second function on line 7."""
+                pass
+
+            class FirstClass:
+                """First class on line 11."""
+                pass
+
+            class SecondClass:
+                """Second class on line 15."""
+
+                def method_one(self):
+                    """Method on line 18."""
+                    pass
+
+                def method_two(self):
+                    """Method on line 22."""
+                    pass
+        ''')
+
+        extractor = ast_parser.ASTExtractor(code, "module.py")
+        result = extractor.extract()
+
+        # Check function line numbers
+        first_func = next(f for f in result.functions if f.name == "first_function")
+        assert first_func.line_number == 4
+
+        second_func = next(f for f in result.functions if f.name == "second_function")
+        assert second_func.line_number == 8
+
+        # Check class line numbers
+        first_class = next(c for c in result.classes if c.name == "FirstClass")
+        assert first_class.line_number == 12
+
+        second_class = next(c for c in result.classes if c.name == "SecondClass")
+        assert second_class.line_number == 16
+
+        # Check method line numbers
+        method_one = next(m for m in second_class.methods if m.name == "method_one")
+        assert method_one.line_number == 19
+
+        method_two = next(m for m in second_class.methods if m.name == "method_two")
+        assert method_two.line_number == 23

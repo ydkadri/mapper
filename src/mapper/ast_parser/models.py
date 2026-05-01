@@ -111,6 +111,7 @@ class FunctionInfo:
 
     name: str
     is_public: bool
+    line_number: int | None = None
     docstring: str | None = None
     parameters: list[ParameterInfo] = attrs.field(factory=list)
     return_type: str | None = None
@@ -124,6 +125,7 @@ class ClassInfo:
 
     name: str
     is_public: bool
+    line_number: int | None = None
     docstring: str | None = None
     bases: list[str] = attrs.field(factory=list)
     decorators: list[DecoratorInfo] = attrs.field(factory=list)

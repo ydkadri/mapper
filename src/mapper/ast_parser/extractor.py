@@ -152,6 +152,7 @@ class ASTExtractor:
         return models.ClassInfo(
             name=node.name,
             is_public=self._is_public(node.name),
+            line_number=node.lineno,
             docstring=ast.get_docstring(node),
             bases=bases,
             decorators=decorators,
@@ -189,6 +190,7 @@ class ASTExtractor:
         return models.FunctionInfo(
             name=node.name,
             is_public=self._is_public(node.name),
+            line_number=node.lineno,
             docstring=ast.get_docstring(node),
             parameters=parameters,
             return_type=return_type,

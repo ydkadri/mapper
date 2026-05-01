@@ -262,6 +262,8 @@ class GraphLoader:
             "package": self.package_name,
             "is_public": class_info.is_public,
         }
+        if class_info.line_number is not None:
+            properties["line_number"] = class_info.line_number
         if class_info.docstring:
             properties["docstring"] = class_info.docstring
         if class_info.bases:
@@ -296,6 +298,8 @@ class GraphLoader:
             "package": self.package_name,
             "is_public": func_info.is_public,
         }
+        if func_info.line_number is not None:
+            properties["line_number"] = func_info.line_number
         if func_info.docstring:
             properties["docstring"] = func_info.docstring
         if func_info.return_type:
