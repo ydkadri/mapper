@@ -52,7 +52,7 @@ class ParamComplexityRule(models.QualityRule):
         RETURN m.path as file_path,
                collect({
                  function: f.name,
-                 line: null,
+                 line: f.line_number,
                  param_count: param_count
                }) as violations
         ORDER BY file_path

@@ -608,6 +608,93 @@ class TestGraphLoader:
         assert mock_connection.create_node.call_count >= 2  # module + class
         # Relationship creation depends on whether base class exists in graph
 
+    def test_load_with_line_numbers(self):
+        """Test that line numbers are stored in Neo4j nodes."""
+        mock_connection = Mock()
+        loader = graph_loader.GraphLoader(mock_connection, package_name="test-pkg")
+
+        module_info = ast_parser.models.ModuleInfo(path="test.py", name="test")
+
+        # Function with line number
+        func_info = ast_parser.models.FunctionInfo(
+            name="my_function",
+            is_public=True,
+            line_number=42,
+            docstring="Function on line 42",
+        )
+
+        # Class with line number
+        class_info = ast_parser.models.ClassInfo(
+            name="MyClass",
+            is_public=True,
+            line_number=100,
+            docstring="Class on line 100",
+            methods=[
+                ast_parser.models.FunctionInfo(
+                    name="my_method",
+                    is_public=True,
+                    line_number=105,
+                    docstring="Method on line 105",
+                )
+            ],
+        )
+
+        extraction = ast_parser.models.ExtractionResult(
+            module=module_info,
+            functions=[func_info],
+            classes=[class_info],
+        )
+
+        loader.load_extraction(extraction)
+
+        # Module + Class + Method + Function = 4 nodes (classes processed before functions)
+        assert mock_connection.create_node.call_count == 4
+
+        # Verify class node has line_number (call 1 - first after module)
+        class_call = mock_connection.create_node.call_args_list[1]
+        class_props = class_call[0][1]
+        assert class_props["name"] == "MyClass"
+        assert class_props["line_number"] == 100
+
+        # Verify method node has line_number (call 2 - inside class)
+        method_call = mock_connection.create_node.call_args_list[2]
+        method_props = method_call[0][1]
+        assert method_props["name"] == "my_method"
+        assert method_props["line_number"] == 105
+
+        # Verify function node has line_number (call 3 - functions processed after classes)
+        func_call = mock_connection.create_node.call_args_list[3]
+        func_props = func_call[0][1]
+        assert func_props["name"] == "my_function"
+        assert func_props["line_number"] == 42
+
+    def test_load_without_line_numbers(self):
+        """Test that missing line numbers (None) are handled gracefully."""
+        mock_connection = Mock()
+        loader = graph_loader.GraphLoader(mock_connection, package_name="test-pkg")
+
+        module_info = ast_parser.models.ModuleInfo(path="test.py", name="test")
+
+        # Function without line number (backwards compatibility)
+        func_info = ast_parser.models.FunctionInfo(
+            name="my_function",
+            is_public=True,
+            line_number=None,
+        )
+
+        extraction = ast_parser.models.ExtractionResult(
+            module=module_info,
+            functions=[func_info],
+        )
+
+        loader.load_extraction(extraction)
+
+        # Verify function node was created without line_number property
+        func_call = mock_connection.create_node.call_args_list[1]
+        func_props = func_call[0][1]
+        assert func_props["name"] == "my_function"
+        assert "line_number" not in func_props  # Should not include None values
+
 
 class TestGraphLoaderBatch:
     """Tests for batch loading operations."""
