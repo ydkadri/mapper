@@ -1,6 +1,6 @@
 """Find dead code query - unused functions and classes."""
 
-from typing import Any
+from typing import Any, Literal
 
 import attrs
 
@@ -24,7 +24,7 @@ class DeadCodeQuery(Query):
     # Metadata
     # -------------------------------------------------------------------------
 
-    name: str = "find-dead-code"
+    name: Literal["find-dead-code"] = "find-dead-code"
     description: str = "Find unused functions and classes"
     group: QueryGroup = QueryGroup.RISK
     columns: list[str] = attrs.field(factory=lambda: ["Severity", "FQN", "Type", "Public"])

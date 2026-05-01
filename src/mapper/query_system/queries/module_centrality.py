@@ -1,6 +1,6 @@
 """Module centrality query - find most depended-on modules."""
 
-from typing import Any
+from typing import Any, Literal
 
 import attrs
 
@@ -25,7 +25,7 @@ class ModuleCentralityQuery(Query):
     # Metadata
     # -------------------------------------------------------------------------
 
-    name: str = "analyze-module-centrality"
+    name: Literal["analyze-module-centrality"] = "analyze-module-centrality"
     description: str = "Find most depended-on modules"
     group: QueryGroup = QueryGroup.CRITICAL
     columns: list[str] = attrs.field(factory=lambda: ["Severity", "Module", "Dependents", "Risk"])

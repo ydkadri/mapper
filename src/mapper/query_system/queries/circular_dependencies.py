@@ -1,6 +1,6 @@
 """Circular dependencies query - module import cycles."""
 
-from typing import Any
+from typing import Any, Literal
 
 import attrs
 
@@ -31,7 +31,7 @@ class CircularDependenciesQuery(Query):
     # Metadata
     # -------------------------------------------------------------------------
 
-    name: str = "detect-circular-dependencies"
+    name: Literal["detect-circular-dependencies"] = "detect-circular-dependencies"
     description: str = "Find circular dependencies in module imports"
     group: QueryGroup = QueryGroup.RISK
     columns: list[str] = attrs.field(factory=lambda: ["Severity", "Cycle", "Length"])

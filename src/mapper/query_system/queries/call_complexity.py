@@ -1,6 +1,6 @@
 """Call complexity query - functions with deep call chains."""
 
-from typing import Any
+from typing import Any, Literal
 
 import attrs
 
@@ -32,7 +32,7 @@ class CallComplexityQuery(Query):
     # Metadata
     # -------------------------------------------------------------------------
 
-    name: str = "analyze-call-complexity"
+    name: Literal["analyze-call-complexity"] = "analyze-call-complexity"
     description: str = "Find functions with deep call chains"
     group: QueryGroup = QueryGroup.RISK
     columns: list[str] = attrs.field(factory=lambda: ["Severity", "Function", "Max Depth"])

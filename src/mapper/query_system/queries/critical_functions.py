@@ -1,6 +1,6 @@
 """Critical functions query - find most-called functions."""
 
-from typing import Any
+from typing import Any, Literal
 
 import attrs
 
@@ -26,7 +26,7 @@ class CriticalFunctionsQuery(Query):
     # Metadata
     # -------------------------------------------------------------------------
 
-    name: str = "find-critical-functions"
+    name: Literal["find-critical-functions"] = "find-critical-functions"
     description: str = "Find most-called functions"
     group: QueryGroup = QueryGroup.CRITICAL
     columns: list[str] = attrs.field(factory=lambda: ["Severity", "Function", "Callers", "Risk"])
